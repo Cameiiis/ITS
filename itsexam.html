@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITS Database Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d47;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.15);
+    --correct: #10b981;
+    --correct-bg: rgba(16,185,129,0.1);
+    --wrong: #ef4444;
+    --wrong-bg: rgba(239,68,68,0.1);
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --yellow: #f59e0b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    background: rgba(10,14,26,0.8);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .progress-info {
+    text-align: right;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .progress-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent2);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .progress-bar-wrap {
+    width: 200px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #8b5cf6);
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 760px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.05);
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    background: var(--surface2);
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .q-badge {
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .q-type-badge {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--border);
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .multi-badge {
+    font-size: 11px;
+    color: var(--yellow);
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .card-body {
+    padding: 28px;
+  }
+
+  .question-text {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 28px;
+    font-weight: 400;
+  }
+
+  .question-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent2);
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option-btn {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+    transition: all 0.15s ease;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .option-btn:hover:not([disabled]) {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    transform: translateX(3px);
+  }
+
+  .option-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: #6ee7b7;
+  }
+
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    color: #fca5a5;
+  }
+
+  .option-btn.reveal-correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: #6ee7b7;
+    opacity: 0.7;
+  }
+
+  .option-marker {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s;
+  }
+
+  .option-btn.selected .option-marker,
+  .option-btn.correct .option-marker,
+  .option-btn.wrong .option-marker {
+    color: white;
+  }
+
+  .option-btn.correct .option-marker { background: var(--correct); border-color: var(--correct); }
+  .option-btn.wrong .option-marker { background: var(--wrong); border-color: var(--wrong); }
+  .option-btn.selected .option-marker { background: var(--accent); border-color: var(--accent); }
+  .option-btn.reveal-correct .option-marker { background: var(--correct); border-color: var(--correct); color: white; }
+
+  .option-text {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Long code options */
+  .option-btn.code-option .option-text {
+    white-space: pre-wrap;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .feedback-msg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .feedback-msg.correct { background: var(--correct-bg); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+  .feedback-msg.wrong { background: var(--wrong-bg); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+
+  .feedback-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* Underlined term highlighting for "evaluate underlined text" questions */
+  u.eval-underline {
+    text-decoration: underline;
+    text-decoration-color: #a78bfa;
+    text-decoration-thickness: 2px;
+    color: #c4b5fd;
+    font-weight: 600;
+    font-style: normal;
+  }
+
+  /* Instructions sub-block for evaluate underlined text questions */
+  .eval-instructions {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(99, 102, 241, 0.08);
+    border-left: 3px solid rgba(99, 102, 241, 0.4);
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* Image-based options notice */
+  .image-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #fde68a;
+    line-height: 1.5;
+  }
+  .image-notice span:first-child { flex-shrink: 0; font-size: 16px; }
+
+  /* ============================================
+     MATCHING QUESTION STYLES
+     ============================================ */
+
+  .match-table {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .match-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .match-statement {
+    font-size: 15px;
+    color: var(--text1);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .match-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .match-choices-col {
+    flex-direction: column;
+    margin-top: 8px;
+  }
+
+  .match-choice-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.05);
+    color: var(--text1);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .match-choice-btn:hover { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); }
+  .match-choice-btn.match-selected { background: rgba(99,102,241,0.25); border-color: #818cf8; color: #c7d2fe; font-weight: 600; }
+  .match-choice-btn.match-correct { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); color: #6ee7b7; }
+  .match-choice-btn.match-wrong { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+  .match-choice-btn.match-reveal { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #6ee7b7; opacity: 0.7; }
+  .match-choice-btn:disabled { cursor: default; }
+
+  .match-label-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(99,102,241,0.2);
+    color: #a5b4fc;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* Drag-and-drop styles */
+  .drag-drop-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+  }
+
+  @media (max-width: 640px) {
+    .drag-drop-wrapper { grid-template-columns: 1fr; }
+  }
+
+  .drag-bank {
+    background: rgba(99,102,241,0.06);
+    border: 1.5px dashed rgba(99,102,241,0.3);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 120px;
+  }
+
+  .drag-bank-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .drag-chip {
+    padding: 10px 14px;
+    background: rgba(99,102,241,0.15);
+    border: 1.5px solid rgba(99,102,241,0.35);
+    border-radius: 8px;
+    color: #c7d2fe;
+    font-size: 13px;
+    cursor: grab;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .drag-chip:hover { background: rgba(99,102,241,0.25); transform: translateY(-1px); }
+  .drag-chip.dragging { opacity: 0.5; cursor: grabbing; }
+  .drag-chip.chip-active { border-color: #818cf8; box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
+
+  .drag-zones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .drag-zone {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .drag-zone-statement {
+    font-size: 14px;
+    color: var(--text1);
+    line-height: 1.5;
+  }
+
+  .drag-drop-area {
+    min-height: 46px;
+    border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8px 12px;
+    transition: all 0.15s;
+    background: rgba(255,255,255,0.02);
+  }
+  .drag-drop-area.drag-over { border-color: #818cf8; background: rgba(99,102,241,0.1); }
+  .drag-drop-area.drop-correct { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.07); }
+  .drag-drop-area.drop-wrong { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.07); }
+
+  .drop-placeholder {
+    color: var(--text3);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .drop-chip {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .chip-placed { background: rgba(99,102,241,0.2); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.4); }
+  .chip-correct { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .chip-wrong { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+  .match-correct-text { color: #6ee7b7; font-weight: 600; }
+  .match-wrong-text { color: #fca5a5; font-weight: 600; }
+
+  /* Question text with bullet points (context questions) */
+  #question-text { white-space: pre-line; }
+
+  .card-footer {
+    padding: 20px 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: inherit;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+
+  .nav-btn:hover:not([disabled]) {
+    border-color: var(--accent);
+    color: var(--accent2);
+    background: var(--accent-glow);
+  }
+
+  .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border-color: transparent;
+    color: white;
+  }
+
+  .btn-primary:hover:not([disabled]) {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    border-color: transparent;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+  }
+
+  .btn-finish {
+    background: linear-gradient(135deg, var(--correct), #059669);
+    border-color: transparent;
+    color: white;
+  }
+
+  .btn-finish:hover:not([disabled]) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(16,185,129,0.3);
+  }
+
+  .center-footer { margin: 0 auto; }
+
+  /* ── MINI MAP ── */
+  .mini-map {
+    max-width: 760px;
+    margin: 0 auto 16px;
+    padding: 0 20px;
+  }
+
+  .mini-map-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .mini-map-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .mini-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.1s;
+    font-size: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+  }
+
+  .mini-dot.answered-correct { background: rgba(16,185,129,0.4); border-color: var(--correct); }
+  .mini-dot.answered-wrong { background: rgba(239,68,68,0.4); border-color: var(--wrong); }
+  .mini-dot.answered-skipped { background: rgba(245,158,11,0.2); border-color: var(--yellow); }
+  .mini-dot.current { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+  .mini-dot:hover { transform: scale(1.2); }
+
+  /* ── RESULTS ── */
+  #results-screen {
+    display: none;
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;
+    margin: 0 auto;
+    animation: slideUp 0.4s ease;
+  }
+
+  .result-hero {
+    text-align: center;
+    padding: 40px 20px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%);
+    pointer-events: none;
+  }
+
+  .result-grade {
+    font-size: 96px;
+    font-weight: 700;
+    line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .result-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text3);
+    margin-top: 4px;
+    margin-bottom: 24px;
+  }
+
+  .result-stats {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 28px;
+    min-width: 120px;
+  }
+
+  .stat-val {
+    font-size: 36px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+  }
+
+  .stat-val.green { color: var(--correct); }
+  .stat-val.red { color: var(--wrong); }
+  .stat-val.gray { color: var(--text3); }
+
+  .stat-lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* Review section */
+  .review-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .review-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+  }
+
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text3);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .filter-tab.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent2); }
+  .filter-tab.correct-tab.active { border-color: var(--correct); background: var(--correct-bg); color: #6ee7b7; }
+  .filter-tab.wrong-tab.active { border-color: var(--wrong); background: var(--wrong-bg); color: #fca5a5; }
+
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .review-list::-webkit-scrollbar { width: 4px; }
+  .review-list::-webkit-scrollbar-track { background: var(--surface2); }
+  .review-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .review-item {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .review-item:hover { border-color: var(--accent); }
+  .review-item.ri-correct { border-color: rgba(16,185,129,0.3); }
+  .review-item.ri-wrong { border-color: rgba(239,68,68,0.3); }
+
+  .ri-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .ri-num {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text3);
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .ri-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .ri-status.correct { background: var(--correct-bg); color: #6ee7b7; }
+  .ri-status.wrong { background: var(--wrong-bg); color: #fca5a5; }
+  .ri-status.skipped { background: rgba(245,158,11,0.1); color: var(--yellow); }
+
+  .ri-question {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .ri-answers {
+    display: none;
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .review-item.expanded .ri-answers { display: block; }
+
+  .ri-answer-row {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .ri-answer-row.your-ans { background: var(--wrong-bg); color: #fca5a5; }
+  .ri-answer-row.correct-ans { background: var(--correct-bg); color: #6ee7b7; }
+  .ri-answer-row.your-correct { background: var(--correct-bg); color: #6ee7b7; }
+
+  .ri-expand-hint {
+    font-size: 11px;
+    color: var(--text3);
+    cursor: pointer;
+  }
+
+  .retry-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    font-family: inherit;
+    margin: 24px auto 0;
+    transition: all 0.15s;
+    display: block;
+  }
+
+  .retry-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(59,130,246,0.35); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header { padding: 14px 16px; }
+    .progress-bar-wrap { width: 120px; }
+    .card-body { padding: 20px 16px; }
+    .card-footer { padding: 16px; flex-wrap: wrap; }
+    .result-grade { font-size: 72px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🗄️</div>
+      <div>
+        <div class="logo-text">ITS Database</div>
+        <div class="logo-sub">Section 1 Quiz</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="nav-btn btn-finish" id="finish-quiz-btn" onclick="showResults()" style="font-size:13px;padding:8px 16px;">
+        🏁 Finish Quiz
+      </button>
+      <div class="progress-info">
+        <div class="progress-label">Question</div>
+        <div class="progress-count" id="hdr-progress">1 / 200</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-bar" style="width:0.5%"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Quiz screen -->
+  <div class="main" id="quiz-screen">
+    <div style="width:100%;max-width:760px;">
+      <!-- Mini map -->
+      <div class="mini-map">
+        <div class="mini-map-label">Progress map — click to jump</div>
+        <div class="mini-map-grid" id="mini-map"></div>
+      </div>
+      <!-- Question card -->
+      <div class="card" id="question-card">
+        <div class="card-header" id="card-header">
+          <span class="q-badge" id="q-badge">Q 1</span>
+          <span class="q-type-badge" id="q-type-badge">Multiple Choice</span>
+        </div>
+        <div class="card-body">
+          <div class="question-text" id="question-text"></div>
+          <div class="options-list" id="options-list"></div>
+          <div id="feedback-area"></div>
+        </div>
+        <div class="card-footer">
+          <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Prev</button>
+          <button class="nav-btn btn-primary" id="check-btn" onclick="checkAnswer()" disabled>Check</button>
+          <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results screen -->
+  <div id="results-screen">
+    <div class="result-hero">
+      <div class="result-grade" id="result-score">0%</div>
+      <div class="result-label">Final Score</div>
+      <div class="result-stats">
+        <div class="stat-box">
+          <div class="stat-val green" id="stat-correct">0</div>
+          <div class="stat-lbl">✓ Correct</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val red" id="stat-wrong">0</div>
+          <div class="stat-lbl">✗ Incorrect</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val gray" id="stat-skipped">0</div>
+          <div class="stat-lbl">— Skipped</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--accent2)" id="stat-total">200</div>
+          <div class="stat-lbl">Total</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Correct questions -->
+    <div id="correct-section" style="margin-bottom:24px;">
+      <div class="review-header">
+        <div class="review-title">✓ Correct Answers <span id="correct-nums-summary" style="font-size:13px;color:var(--correct);font-weight:500;"></span></div>
+        <div class="filter-tabs">
+          <button class="filter-tab correct-tab active" onclick="setFilter('correct','all')">All</button>
+        </div>
+      </div>
+      <div class="review-list" id="correct-list"></div>
+    </div>
+
+    <!-- Wrong questions -->
+    <div id="wrong-section">
+      <div class="review-header">
+        <div class="review-title">✗ Incorrect / Skipped <span id="wrong-nums-summary" style="font-size:13px;color:var(--wrong);font-weight:500;"></span></div>
+        <div class="filter-tabs">
+          <button class="filter-tab wrong-tab active" onclick="setFilter('wrong','all')">All</button>
+        </div>
+      </div>
+      <div class="review-list" id="wrong-list"></div>
+    </div>
+
+    <button class="retry-btn" onclick="resetQuiz()">↺ Retake Quiz</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [{"num": 1, "type": "Multiple Choice", "question": "JDBC API 2.0 defines five levels of transaction isolation for database concurrency control. Which of the following is the lowest level of transaction isolation?", "options": [{"text": "TRANSACTION_READ_COMMITTED", "correct": false}, {"text": "TRANSACTION_NONE", "correct": true}, {"text": "TRANSACTION_SERIALIZABLE", "correct": false}, {"text": "TRANSACTION_READ_UNCOMMITTED", "correct": false}, {"text": "TRANSACTION_REPEATABLE_READ", "correct": false}], "correct": ["TRANSACTION_NONE"], "is_multi": false}, {"num": 2, "type": "Multiple Choice", "question": "Which of the following statements about rebuilding an index is true?", "options": [{"text": "The NOLOGGING and ONLINE keywords can never be used together.", "correct": false}, {"text": "The NOLOGGING and ONLINE keywords are always used together.", "correct": false}, {"text": "Without the ONLINE keyword the index is locked for any DML operation.", "correct": true}, {"text": "Without the ONLINE keyword the index is locked for the SELECT operation.", "correct": false}], "correct": ["Without the ONLINE keyword the index is locked for any DML operation."], "is_multi": false}, {"num": 3, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. The UNION keyword combines the results of two queries and returns only rows that appear in both result sets. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "INTERSECT", "correct": true}, {"text": "JOIN", "correct": false}, {"text": "No change is needed", "correct": false}, {"text": "ALL", "correct": false}], "correct": ["INTERSECT"], "is_multi": false}, {"num": 4, "type": "Multiple Choice", "question": "Which permission does a user need in order to run a stored procedure?", "options": [{"text": "RUN", "correct": false}, {"text": "ALLOW", "correct": false}, {"text": "EXECUTE", "correct": true}, {"text": "CALL", "correct": false}], "correct": ["EXECUTE"], "is_multi": false}, {"num": 5, "type": "Multiple Choice", "question": "Which keyword must be included in a create view statement?", "options": [{"text": "WHERE", "correct": false}, {"text": "UPDATE", "correct": false}, {"text": "ORDER BY", "correct": false}, {"text": "SELECT", "correct": true}], "correct": ["SELECT"], "is_multi": false}, {"num": 6, "type": "Multiple Choice", "question": "What statement is used to copy records from one table into an existing table?", "options": [{"text": "SELECT", "correct": false}, {"text": "SELECT WITHIN", "correct": false}, {"text": "SELECT INTO", "correct": false}, {"text": "INSERT INTO .. SELECT", "correct": true}], "correct": ["INSERT INTO .. SELECT"], "is_multi": false}, {"num": 7, "type": "Multiple Choice", "question": "You accept an IT internship at a local charity. The charity asks you to keep a record of its volunteers by using a database table named Volunteer. When volunteers ask to be removed from mailing lists, the table must be updated. You need to use a transaction to ensure that the database has data integrity and referential integrity. Which statement should you use?", "options": [{"text": "Option C", "correct": false}, {"text": "Option D", "correct": false}, {"text": "Option B", "correct": false}, {"text": "Option A", "correct": true}], "correct": ["Option A"], "is_multi": false}, {"num": 8, "type": "Multiple Choice", "question": "Which type of index changes the order in which the data is stored in a table?", "options": [{"text": "clustered", "correct": true}, {"text": "non-clustered", "correct": false}, {"text": "non-sequential", "correct": false}, {"text": "sequential", "correct": false}], "correct": ["clustered"], "is_multi": false}, {"num": 9, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. A key defines the amount of storage space that is allocated to a value in a column. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "validator", "correct": false}, {"text": "data type", "correct": true}, {"text": "No change is needed", "correct": false}, {"text": "format", "correct": false}], "correct": ["data type"], "is_multi": false}, {"num": 10, "type": "Multiple Choice", "question": "Which of the following statements is true about referential integrity?", "options": [{"text": "It checks that no component of a primary key can have a null value and no duplicate entries can exist.", "correct": false}, {"text": "It distinguishes between null values and zero entries.", "correct": false}, {"text": "It checks that no record in a child table can exist if its corresponding record is not available in the parent table.", "correct": true}, {"text": "It checks that the value of a primary key must be consistent throughout the life of an instance.", "correct": false}], "correct": ["It checks that no record in a child table can exist if its corresponding record is not available in the parent table."], "is_multi": false}, {"num": 11, "type": "Multiple Choice", "question": "First normal form requires that a database excludes:", "options": [{"text": "Duplicate rows", "correct": false}, {"text": "Repeating groups", "correct": true}, {"text": "Composite keys", "correct": false}, {"text": "Foreign keys", "correct": false}], "correct": ["Repeating groups"], "is_multi": false}, {"num": 12, "type": "Multiple Choice", "question": "Consider the case of a distance education university.\n\n• The university has many regional centers across the country.\n• Each regional center has a head known as regional manager.\n• Each regional center has allotted more than one study center in its region.\n• Each regional center has a region code, which is unique and specifies a region.\n• Each study center also has a study center code, which is also unique.\n\nWhat is the relationship between regional center and study center?", "options": [{"text": "There is no relationship.", "correct": false}, {"text": "One-to-one", "correct": false}, {"text": "One-to-many", "correct": true}, {"text": "Many-to-many", "correct": false}], "correct": ["One-to-many"], "is_multi": false}, {"num": 13, "type": "Multiple Choice", "question": "You are the database administrator of a MySQL server that runs on a Windows server.\nAll clients are local clients.\nFor security, you want to disable connections from the remote clients.\nWhich of the following steps will you take to accomplish the task?", "options": [{"text": "Start the server with the –shared-memory option.", "correct": false}, {"text": "Start the server with the –secure-auth option.", "correct": false}, {"text": "Start the server with the –skip-networking option.", "correct": true}, {"text": "Start the server with the –disable-networking option.", "correct": false}], "correct": ["Start the server with the –skip-networking option."], "is_multi": false}, {"num": 14, "type": "Multiple Choice", "question": "You work at a restaurant and they ask you to help them with a data issue.\nThey provide you with the following recipe data:\nYou need to normalize the data to third normal form.\nHow many tables should you create?", "options": [{"text": "1", "correct": false}, {"text": "3", "correct": true}, {"text": "2", "correct": false}, {"text": "4", "correct": false}], "correct": ["3"], "is_multi": false}, {"num": 15, "type": "Multiple Choice", "question": "You are the database administrator for a MySQL database.\nThe database server is installed on a Unix system.\nThe time zone files for the system are located at /usr/share/zoneinfo.\nYou need to ensure that the system and MySQL time zones are based on the same information.\nWhich of the following statements will you use to accomplish the task?", "options": [{"text": "shell> mysql_tz_to_sql /ust/share/zoneinfo | mysql -u root mysql", "correct": false}, {"text": "shell> /ust/share/zoneinfo mysql_tzinfo_to_sql | mysql -u root mysql", "correct": false}, {"text": "shell> /ust/share/zoneinfo mysql_tz_to_sql | mysql -u root mysal", "correct": false}, {"text": "shell> mysql_tzinfo_to_sql /ust/share/zoneinfo | mysql -u root mysql", "correct": true}], "correct": ["shell> mysql_tzinfo_to_sql /ust/share/zoneinfo | mysql -u root mysql"], "is_multi": false}, {"num": 16, "type": "Multiple Choice", "question": "What is not allowed in object names in SQL?", "options": [{"text": "special characters", "correct": false}, {"text": "symbols", "correct": false}, {"text": "spaces", "correct": true}, {"text": "numbers", "correct": false}], "correct": ["spaces"], "is_multi": false}, {"num": 17, "type": "Multiple Choice", "question": "You work as a Database Designer for DataOneWorld Inc.\nThe company has a SQL Server database.\nYou are assigned the task of creating a data model of an enterprise based on a specific data model. The model to be created should be independent of a particular DBMS.\nWhich of the following database designs will help you accomplish the task?", "options": [{"text": "Application design", "correct": false}, {"text": "Physical database design", "correct": false}, {"text": "Logical database design", "correct": true}, {"text": "Conceptual database design", "correct": false}], "correct": ["Logical database design"], "is_multi": false}, {"num": 18, "type": "Multiple Choice", "question": "Which of the following are the main approaches in the database design? Each correct answer represents a complete solution. (Choose three.)", "options": [{"text": "Top-down approach", "correct": true}, {"text": "Bottom-up approach", "correct": true}, {"text": "Middle approach", "correct": false}, {"text": "Inside-out approach", "correct": true}], "correct": ["Top-down approach", "Bottom-up approach", "Inside-out approach"], "is_multi": true}, {"num": 19, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. You combine data from three tables into one table. The new table includes redundancy to optimize read performance.", "options": [{"text": "No change is needed", "correct": true}, {"text": "Indexed", "correct": false}, {"text": "Normalized", "correct": false}, {"text": "Truncated", "correct": false}], "correct": ["No change is needed"], "is_multi": false}, {"num": 20, "type": "Multiple Choice", "question": "You have a database table named SongInformation as defined below:\nYou need to create a Structured Query Language (SQL) query to retrieve only the names of songs that sold more than 1000 compact discs (CDs).\nWhich query should you use?", "options": [{"text": "Option B", "correct": false}, {"text": "Option D", "correct": false}, {"text": "Option C", "correct": false}, {"text": "Option A", "correct": true}], "correct": ["Option A"], "is_multi": false}, {"num": 21, "type": "Multiple Choice", "question": "You have two tables named Cars and Color as defined below. The two tables are related by ColorId.\nYou run the following SQL statement: select:\nHow many rows does the SQL statement return?", "options": [{"text": "0", "correct": false}, {"text": "3", "correct": true}, {"text": "6", "correct": false}, {"text": "2", "correct": false}], "correct": ["3"], "is_multi": false}, {"num": 22, "type": "Multiple Choice", "question": "In SQL, an insert statement is used to add a:", "options": [{"text": "Table to a database.", "correct": false}, {"text": "Column to a table definition.", "correct": false}, {"text": "User to a database.", "correct": false}, {"text": "Row of data to a table.", "correct": true}], "correct": ["Row of data to a table."], "is_multi": false}, {"num": 23, "type": "Multiple Choice", "question": "Which statement best defines a syntax error?", "options": [{"text": "Causes tables to not appear correctly within a database", "correct": false}, {"text": "Prevents a table from being created", "correct": false}, {"text": "Prevents changes to a database from being completed", "correct": false}, {"text": "Causes a statement not to run", "correct": true}], "correct": ["Causes a statement not to run"], "is_multi": false}, {"num": 24, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. A relational database management system employs the concept of an attribute to ensure that data entered into a field in a column is valid. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "an index", "correct": false}, {"text": "a constraint", "correct": true}, {"text": "a primary key", "correct": false}, {"text": "No change is needed", "correct": false}], "correct": ["a constraint"], "is_multi": false}, {"num": 25, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. The UNION keyword combines the results of two queries and returns only rows that appear in both result sets. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "INTERSECT", "correct": true}, {"text": "ALL", "correct": false}, {"text": "JOIN", "correct": false}, {"text": "No change is needed", "correct": false}], "correct": ["INTERSECT"], "is_multi": false}, {"num": 26, "type": "Matching", "question": "Instructions: For each of the following statements, select Yes if the statement is true. Otherwise, select No.", "options": [{"text": "No", "correct": true}, {"text": "Yes", "correct": true}, {"text": "Yes", "correct": true}, {"text": "No", "correct": true}], "correct": ["No", "Yes", "Yes", "No"], "is_multi": true, "match_type": "yes_no", "pairs": [{"label": "A", "statement": "A clustered index sorts and stores the data columns of a table or view in order, based on the clustered index key.", "answer": "No"}, {"label": "B", "statement": "A non-clustered index is defined on a table or view by using a clustered index or heap.", "answer": "Yes"}, {"label": "C", "statement": "A unique index ensures that the index key contains no duplicate values and that every row in the table or view is unique.", "answer": "Yes"}, {"label": "D", "statement": "A filtered index is a clustered index that is optimized for queries that select a small percentage of rows from a table.", "answer": "No"}], "choices": ["No", "Yes"]}, {"num": 27, "type": "Multiple Choice", "question": "You have a table of products with fields for ProductID, Name, and Price.\nYou need to write an UPDATE statement that sets the value in the InStock field to Yes for a specific ProductID.\nWhich clause should you use in your update statement?", "options": [{"text": "WHERE", "correct": true}, {"text": "THAT", "correct": false}, {"text": "HAVING", "correct": false}, {"text": "GROUP BY", "correct": false}], "correct": ["WHERE"], "is_multi": false}, {"num": 28, "type": "Multiple Choice", "question": "You manage a database named Customers, which includes a table named Orders.\nThe Orders table is frequently queried, but only orders with a sales total of more than $1000.00 are required in the query.\nYou want to create an index to speed up these types of queries at the same time, ensuring the index is as small as possible.\nWhat type of index should you use?", "options": [{"text": "Clustered", "correct": false}, {"text": "XML", "correct": false}, {"text": "Filtered", "correct": true}, {"text": "Non-clustered", "correct": false}, {"text": "29 MultipleChoice 1/1", "correct": false}], "correct": ["Filtered"], "is_multi": false}, {"num": 29, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct.\nViews are database objects that contain all of the data in a database.\nInstructions: Review the underlined text. If it makes the statement correct, select \"No change is needed.\" If the statement is incorrect, select the answer choice that makes the statement correct.", "options": [{"text": "Stored procedures", "correct": false}, {"text": "Tables", "correct": true}, {"text": "No change is needed", "correct": false}, {"text": "Queries", "correct": false}], "correct": ["Tables"], "is_multi": false}, {"num": 30, "type": "Multiple Choice", "question": "At 3:00 P.M. (1500 hours), you create a backup of your database. At 4:00 P.M. (1600 hours), you create a table named Customer and import data into the table. At 5:00 P.M.\n(1700 hours), your server fails.\nYou run a script to apply only the 3:00 P.M. backup to your database.\nWhat is the result of the script?", "options": [{"text": "The script fails.", "correct": false}, {"text": "The Customer data no longer exists.", "correct": false}, {"text": "The Customer table no longer exists.", "correct": true}, {"text": "The Customer table exists but has no data.", "correct": false}], "correct": ["The Customer table no longer exists."], "is_multi": false}, {"num": 31, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. Truncate is a database term used to describe the process of applying a backup to a damaged or corrupt database. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "Attach", "correct": false}, {"text": "No Change is needed", "correct": false}, {"text": "Restore", "correct": true}, {"text": "Commit", "correct": false}], "correct": ["Restore"], "is_multi": false}, {"num": 32, "type": "Multiple Choice", "question": "You assign User1 a set of permissions that include the WITH GRANT OPTION. The WITH GRANT OPTION enables User1 to:", "options": [{"text": "view other users’ permissions.", "correct": false}, {"text": "create new database users.", "correct": false}, {"text": "request a log of permission use.", "correct": false}, {"text": "delegate permissions to other users.", "correct": true}], "correct": ["delegate permissions to other users."], "is_multi": false}, {"num": 33, "type": "Multiple Choice", "question": "You have a table named Employee that includes the following columns:\nEmployeeID\nEmployeeName\nWhich statement should you use to return the number of rows in the table?", "options": [{"text": "Option D", "correct": true}, {"text": "Option C", "correct": false}, {"text": "Option A", "correct": false}, {"text": "Option B", "correct": false}], "correct": ["Option D"], "is_multi": false}, {"num": 34, "type": "Multiple Choice", "question": "You need to list the name and price of each product, sorted by price from highest to lowest. Which statement should you use?", "options": [{"text": "Option A", "correct": true}, {"text": "Option B", "correct": false}, {"text": "Option D", "correct": false}, {"text": "Option C", "correct": false}], "correct": ["Option A"], "is_multi": false}, {"num": 35, "type": "Multiple Choice", "question": "You need to disable User1’s access to view the data in the Customer table. Which statement should you use?", "options": [{"text": "Option B", "correct": false}, {"text": "Option A", "correct": false}, {"text": "Option D", "correct": false}, {"text": "Option C", "correct": true}], "correct": ["Option C"], "is_multi": false}, {"num": 36, "type": "Multiple Choice", "question": "Which of the following is a management activity that allows the stages of the database application to be realized as efficiently and effectively as possible?", "options": [{"text": "Identifying information for objects", "correct": false}, {"text": "Object identification", "correct": false}, {"text": "Database planning", "correct": true}, {"text": "Requirements collection and analysis", "correct": false}], "correct": ["Database planning"], "is_multi": false}, {"num": 37, "type": "Multiple Choice", "question": "Which statement creates a composite key?", "options": [{"text": "Option D", "correct": true}, {"text": "Option C", "correct": false}, {"text": "Option B", "correct": false}, {"text": "Option A", "correct": false}], "correct": ["Option D"], "is_multi": false}, {"num": 38, "type": "Multiple Choice", "question": "What keyword removes records from a table?", "options": [{"text": "REMOVE", "correct": false}, {"text": "DROP", "correct": false}, {"text": "CANCEL", "correct": false}, {"text": "DELETE", "correct": true}], "correct": ["DELETE"], "is_multi": false}, {"num": 39, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct.\nCreate a query that returns a set of table data by using the UPDATE statement.\nInstructions: Review the underlined text. If it makes the statement correct, select \"No change is needed.\" If the statement is incorrect, select the answer choice that makes the statement correct.", "options": [{"text": "INSERT", "correct": false}, {"text": "SELECT", "correct": true}, {"text": "REPLACE", "correct": false}, {"text": "No change is needed", "correct": false}], "correct": ["SELECT"], "is_multi": false}, {"num": 40, "type": "Multiple Choice", "question": "You are the database administrator for a MySQL database server.\nThe network contains new and old (pre-4.1) clients.\nYou configure another database server on the network.\nYou allow the network clients to connect to the new server.\nSome users complain that when they try to connect to the server, they receive the following error:\nERROR 1251: The client does not support authentication protocol requested by the server; consider upgrading MySQL client You do not want to upgrade any client or\nserver right now, and want to enable all clients to connect to the new server successfully.\nWhich of the following steps will you take to resolve the issue?", "options": [{"text": "Run the server with the –secure-auth option.", "correct": false}, {"text": "Run the server with the –old-password option.", "correct": true}, {"text": "Run the server with the –allow-old option.", "correct": false}, {"text": "Run the server with the –enable-old option.", "correct": false}], "correct": ["Run the server with the –old-password option."], "is_multi": false}, {"num": 41, "type": "Multiple Choice", "question": "John works as a Database Administrator for DataOneWorld Inc.\nThe company has a SQL Server database.\nJohn wants to insert records in a table where the database is structured in a fixed format.\nWhich of the following data models will he use to accomplish the task?", "options": [{"text": "Network data model", "correct": false}, {"text": "Entity-Relationship Model", "correct": false}, {"text": "Relational model", "correct": true}, {"text": "Object relational data model", "correct": false}], "correct": ["Relational model"], "is_multi": false}, {"num": 42, "type": "Multiple Choice", "question": "What is the difference between a DELETE statement and a TRUNCATE TABLE statement? One can identify specific records that are being deleted with a DELETE statement, while a TRUNCATE TABLE statement allows one to", "options": [{"text": "delete specific characters in a record", "correct": false}, {"text": "One can identify specific records that are being deleted with a TRUNCATE TABLE statement, while a DELETE statement allows one to", "correct": false}, {"text": "delete specific characters in a record", "correct": false}, {"text": "One can identify specific records that are being deleted with a DELETE statement, while a TRUNCATE TABLE statement deletes all", "correct": false}, {"text": "data in a table", "correct": false}, {"text": "One can identify specific records that are being deleted with a TRUNCATE TABLE statement, while a DELETE statement deletes all", "correct": false}, {"text": "data in a table", "correct": false}], "correct": [], "is_multi": false}, {"num": 43, "type": "Multiple Choice", "question": "You work as the Database Administrator for www.company.com.\nAll servers on the www.company.com network run Windows Server 2003 and Windows Server 2000, and all client computers run Windows XP professional and Windows\nVista.\nThe www.company.com network area consists of a single Active Directory domain named www.company.com.\nThe www.company.com network contains a Microsoft SQL Server 2005 database server named COMPANY-DB111, which you administer at a regular interval of time.\nCOMPANY-DB111 contains and hosts three databases that support different types of business requirements.\nThe network uses the DBA database that supports internal operations including maintaining data, accounting, and mailing. The network’s regular users make use of stored\nprocedures for the data values that need insertion into the tables.\nThe stored procedures used in the network of the company are designed to access SQL variant type parameters and then use the values to build and execute ad hoc query\nstatements that are the part of the SQL statements. During a routine network check, you discover that there are several odd occurrences in the database.\nThe odd occurrences include data deleted from tables and other unauthorized activity.\nYou suspect a user is executing the unauthorized statements through the stored procedures.\nYou are required to stop the unauthorized changes while having least impact on the stored procedures that are in use. Your explanation must use the least administrative\neffort.\nWhat should you do?", "options": [{"text": "The input parameters should be parsed to watch for and block any input including single quotes.", "correct": false}, {"text": "The stored procedure should be customized to use type-specific and length-restricted parameters.", "correct": true}, {"text": "All data handling activity on the table should be audited and recorded.", "correct": false}, {"text": "The stored procedures used for the table should be replaced with ad hoc queries.", "correct": false}], "correct": ["The stored procedure should be customized to use type-specific and length-restricted parameters."], "is_multi": false}, {"num": 44, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. The CREATE TABLE command removes one or more table definitions and all data, indexes, triggers, constraints, and permission specifications for those tables. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "DROP TABLE", "correct": true}, {"text": "TRUNCATE TABLE", "correct": false}, {"text": "No change is needed", "correct": false}, {"text": "ALTER TABLE", "correct": false}], "correct": ["DROP TABLE"], "is_multi": false}, {"num": 45, "type": "Multiple Choice", "question": "You execute the following statement:", "options": [{"text": "SELECT EmployeeID, FirstName, DepartmentName", "correct": false}, {"text": "FROM Employee, Department", "correct": false}, {"text": "This type of operation is called a/an:", "correct": false}, {"text": "Intersection", "correct": false}, {"text": "Outer join", "correct": false}, {"text": "Cartesian product", "correct": true}, {"text": "Equi-join", "correct": false}], "correct": ["Cartesian product"], "is_multi": false}, {"num": 46, "type": "Multiple Choice", "question": "Which command should you use to give a user permission to read the data in a table?", "options": [{"text": "GRANT SELECT", "correct": true}, {"text": "ALLOW SELECT", "correct": false}, {"text": "PERMIT READ", "correct": false}, {"text": "LET READ", "correct": false}], "correct": ["GRANT SELECT"], "is_multi": false}, {"num": 47, "type": "Multiple Choice", "question": "You work as a database developer for www.company.com.com.\nThe company has a database named www.company.com that is hosted on a SQL Server 2008 server. The database includes a table named Employees, which contains the\ndetails of the employees.\nYou want to ensure that anytime any data in the Employees table is modified with an UPDATE statement, they are recorded in a table named EmployeeChanges. The\nEmployeeChanges table includes columns to record what the change was, who made the change, and when they made the change.\nWhat should you create to meet this need?", "options": [{"text": "A DDL trigger that queries the inserted table", "correct": false}, {"text": "A DML trigger that queries the updated table", "correct": false}, {"text": "A DML trigger that queries the inserted table", "correct": true}, {"text": "A DDL trigger that queries the updated table", "correct": false}], "correct": ["A DML trigger that queries the inserted table"], "is_multi": false}, {"num": 48, "type": "Multiple Choice", "question": "Mark works as a Database Designer for Reon Inc.\nHe is assigned the task to create a database for the company.\nHe issues the following query to create the database:\nCREATE DATABASE ‘24342’\nWhat will be the output of the query?", "options": [{"text": "A database will be created.", "correct": true}, {"text": "An error will be generated stating that a database name should be a combination of numerals and alphabets.", "correct": false}, {"text": "An error will be generated stating that a database name must begin with an alphabet and all the alphabets should be in", "correct": false}, {"text": "uppercase.", "correct": false}, {"text": "An error will be generated stating that a database name must begin with an alphabet.", "correct": false}], "correct": ["A database will be created."], "is_multi": false}, {"num": 49, "type": "Multiple Choice", "question": "You have two tables named Cars and Color as defined below. The two tables are related by ColorId.\nYou run the following SQL statement: select:\nHow many rows does the SQL statement return?", "options": [{"text": "6", "correct": false}, {"text": "0", "correct": false}, {"text": "2", "correct": false}, {"text": "3", "correct": true}], "correct": ["3"], "is_multi": false}, {"num": 50, "type": "Multiple Choice", "question": "What must be included in parenthesis in an INSERT INTO .. VALUES statement?", "options": [{"text": "number of columns", "correct": false}, {"text": "column types", "correct": false}, {"text": "required fields", "correct": true}, {"text": "null values", "correct": false}], "correct": ["required fields"], "is_multi": false}, {"num": 51, "type": "Multiple Choice", "question": "Which of the following statements about external tables is true?", "options": [{"text": "They can have indexes.", "correct": false}, {"text": "They can have constraints or triggers.", "correct": false}, {"text": "They cannot be written to with DML commands.", "correct": true}, {"text": "They cannot be used in joins, views, and subqueries", "correct": false}], "correct": ["They cannot be written to with DML commands."], "is_multi": false}, {"num": 52, "type": "Multiple Choice", "question": "You are writing a select statement to find every product whose name contains a specific character. Which keyword should you use in your where clause?", "options": [{"text": "INCLUDES", "correct": false}, {"text": "FIND", "correct": false}, {"text": "BETWEEN", "correct": false}, {"text": "LIKE", "correct": true}], "correct": ["LIKE"], "is_multi": false}, {"num": 53, "type": "Multiple Choice", "question": "While attending college, you accept an IT internship at a local charity. The charity needs to report on data that is related and exists in two tables. You need to establish a relationship between the data that is in the two tables. Which constraint should you define?", "options": [{"text": "Link Key", "correct": false}, {"text": "Foreign Key", "correct": true}, {"text": "Index Key", "correct": false}, {"text": "Default Key", "correct": false}], "correct": ["Foreign Key"], "is_multi": false}, {"num": 54, "type": "Multiple Choice", "question": "You are a Database Administrator of MySQL database.", "options": [{"text": "Few days back, your server crashed. Now, it is up and online.", "correct": false}, {"text": "You need to check the integrity of various tables used in the database.", "correct": false}, {"text": "You need to issue the CHECK TABLE command.", "correct": false}, {"text": "For which of the following tables will this command work? Each correct answer represents a complete solution. (Choose two.)", "correct": false}, {"text": "InnoDB", "correct": true}, {"text": "FEDERATED", "correct": false}, {"text": "MyISAM", "correct": true}, {"text": "MERGE", "correct": false}], "correct": ["InnoDB", "MyISAM"], "is_multi": true}, {"num": 55, "type": "Matching", "question": "Instructions: For each of the following statements, select Yes if the statement is true. Otherwise, select No.", "options": [{"text": "Yes", "correct": true}, {"text": "Yes", "correct": true}, {"text": "No", "correct": true}], "correct": ["Yes", "Yes", "No"], "is_multi": true, "match_type": "yes_no", "pairs": [{"label": "A", "statement": "You can delete data by using a stored procedure.", "answer": "Yes"}, {"label": "B", "statement": "A function must have a return value.", "answer": "Yes"}, {"label": "C", "statement": "A stored procedure must have a return value.", "answer": "No"}], "choices": ["Yes", "No"]}, {"num": 56, "type": "Multiple Choice", "question": "You need to rename a column in a database table. Which data definition language (DDL) statement should you use?", "options": [{"text": "CREATE", "correct": false}, {"text": "ALTER", "correct": true}, {"text": "UPDATE", "correct": false}, {"text": "INSERT", "correct": false}], "correct": ["ALTER"], "is_multi": false}, {"num": 57, "type": "Matching", "question": "Instructions: For each of the following statements, select the appropriate answer choice.", "options": [{"text": "client", "correct": true}, {"text": "s01.constoso.com", "correct": true}], "correct": ["client", "s01.constoso.com"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "The [answer choice] computer is the first line of defense against SQL injections and weak input validation.", "answer": "client"}, {"label": "B", "statement": "The [answer choice] computer should be formatted with NTFS to protect program, database and log files from unauthorized access.", "answer": "s01.constoso.com"}], "choices": ["client", "www.contoso.com", "s01.constoso.com"]}, {"num": 58, "type": "Multiple Choice", "question": "Remo works as a Database Designer for Tech Inc.", "options": [{"text": "He wants to create a table named Product.", "correct": false}, {"text": "He issues the following query to create the Product table:", "correct": false}, {"text": "CREATE Product (", "correct": false}, {"text": "ProductID Char (10) NOT NULL,", "correct": false}, {"text": "OrderID Char (10) NULL", "correct": false}, {"text": "ProductName Varchar NOT NULL,", "correct": false}, {"text": "Primary key (OrderID, ProductID))", "correct": false}, {"text": "What are the errors in the above query? Each correct answer represents a complete solution. (Choose two.)", "correct": false}, {"text": "An attribute declared as a primary key cannot contain NULL values.", "correct": true}, {"text": "Each attribute should be defined as a primary key separately.", "correct": false}, {"text": "A table cannot have two primary keys.", "correct": false}, {"text": "ProductName is declared as Varchar without specifying the width of the column.", "correct": true}], "correct": ["An attribute declared as a primary key cannot contain NULL values.", "ProductName is declared as Varchar without specifying the width of the column."], "is_multi": true}, {"num": 59, "type": "Multiple Choice", "question": "On which database structure does an insert statement operate?", "options": [{"text": "Role", "correct": false}, {"text": "Stored procedure", "correct": false}, {"text": "User", "correct": false}, {"text": "Trigger", "correct": false}, {"text": "T bl", "correct": true}, {"text": "Table", "correct": true}], "correct": ["T bl", "Table"], "is_multi": true}, {"num": 60, "type": "Multiple Choice", "question": "While a clustered index is based on a __________, a nonclustered index can be based on any other field.", "options": [{"text": "column", "correct": false}, {"text": "foreign key field", "correct": false}, {"text": "row", "correct": false}, {"text": "primary key field", "correct": true}], "correct": ["primary key field"], "is_multi": false}, {"num": 61, "type": "Multiple Choice", "question": "You are a database developer for a database named Customers hosted on a SQL Server 2008 server.", "options": [{"text": "Recently, several customers were deleted from the Customers database.", "correct": false}, {"text": "To ensure this is not repeated in future, you have decided to create a DML trigger to prevent it.", "correct": false}, {"text": "What code will create the trigger to meet your goals? Each correct answer represents a complete solution. (Choose all that apply.)", "correct": false}, {"text": "CREATE TRIGGER trgDeleteCustomer", "correct": false}, {"text": "ON dbo.Customers", "correct": false}, {"text": "BEFORE DELETE", "correct": false}, {"text": "AS", "correct": false}, {"text": "RAISERROR(‘Customers cannot be deleted. An error has been logged’, 16, 10) WITH LOG ROLLBACK TRANSACTION", "correct": false}, {"text": "CREATE TRIGGER trgDeleteCustomer", "correct": false}, {"text": "ON dbo.Customers", "correct": false}, {"text": "AFTER DELETE", "correct": false}, {"text": "AS", "correct": true}, {"text": "IF (SELECT COUNT(*) FROM DELETED) > 0", "correct": false}, {"text": "BEGIN", "correct": false}, {"text": "RAISERROR(‘Customers cannot be deleted. An error has been logged’, 16, 10) WITH LOG ROLLBACKTRANSACTION END", "correct": false}, {"text": "CREATE TRIGGER trgDeleteCustomer", "correct": false}, {"text": "ON dbo.Customers", "correct": false}, {"text": "AFTER DELETE", "correct": false}, {"text": "AS", "correct": false}, {"text": "IF(SELECT COUNT(*) FROM DELETED) > 1", "correct": false}, {"text": "BEGIN", "correct": false}, {"text": "RAISERROR(‘Customers cannot be deleted. An error has been logged’, 16, 10) WITH LOG ROLLBACK TRANSACTION END", "correct": false}, {"text": "CREATE TRIGGER trgDeleteCustomer", "correct": false}, {"text": "ON dbo.Customers", "correct": false}, {"text": "AFTER DELETE", "correct": true}, {"text": "AS", "correct": false}, {"text": "RAISERROR(‘Customers cannot be deleted. An error has been logged’, 16, 10) WITH LOG ROLLBACK TRANSACTION", "correct": false}], "correct": ["AS", "AFTER DELETE"], "is_multi": true}, {"num": 62, "type": "Multiple Choice", "question": "You accept an IT internship at a local charity. The charity asks you to keep a record of its volunteers by using a database table named Volunteer.\nThe table has the following columns and rows:\nWhen volunteer information changes, you must update the table.\nYou need to change Tia’s name to Kimberly.\nWhich statement should you choose?", "options": [{"text": "Option D", "correct": true}, {"text": "Option A", "correct": false}, {"text": "Option B", "correct": false}, {"text": "Option C", "correct": false}], "correct": ["Option D"], "is_multi": false}, {"num": 63, "type": "Multiple Choice", "question": "Which statement best defines a view?", "options": [{"text": "a location within a database that stores general information", "correct": false}, {"text": "a stored statement that leads one to specific information", "correct": true}, {"text": "a location within a database that stores specific information", "correct": false}, {"text": "a stored statement that leads one to general information", "correct": false}], "correct": ["a stored statement that leads one to specific information"], "is_multi": false}, {"num": 64, "type": "Multiple Choice", "question": "One reason to add an index is to:", "options": [{"text": "Decrease storage space.", "correct": false}, {"text": "Improve performance of select statements.", "correct": true}, {"text": "Improve performance of insert statements.", "correct": false}, {"text": "Increase database security.", "correct": false}], "correct": ["Improve performance of select statements."], "is_multi": false}, {"num": 65, "type": "Multiple Choice", "question": "You execute the following statement:", "options": [{"text": "This statement is an example of a/an:", "correct": false}, {"text": "Outer join", "correct": false}, {"text": "Cartesian product", "correct": false}, {"text": "Subquery", "correct": true}, {"text": "Union", "correct": false}], "correct": ["Subquery"], "is_multi": false}, {"num": 66, "type": "Multiple Choice", "question": "You need to store the contact information for each student in your school database. You should store each student’s information in a:", "options": [{"text": "Row", "correct": true}, {"text": "Stored procedure", "correct": false}, {"text": "Variable", "correct": false}, {"text": "Function", "correct": false}], "correct": ["Row"], "is_multi": false}, {"num": 67, "type": "Multiple Choice", "question": "You have a table named Product. You create a view that includes all the products from the Product table that are in the Furniture category. You execute a statement on the Product table that deletes all the products in the Furniture category.", "options": [{"text": "After you execute the statement, the result set of the view is:", "correct": false}, {"text": "Archived", "correct": false}, {"text": "Deleted", "correct": false}, {"text": "Unchanged", "correct": false}, {"text": "Empty", "correct": true}], "correct": ["Empty"], "is_multi": false}, {"num": 68, "type": "Multiple Choice", "question": "You work as a Database Administrator for DataOneWorld Inc.\nManagement instructs you to remove an object from the relational database management system.\nWhichofthefollowingstatementswillyouusetoaccomplishthetask?", "options": [{"text": "CREATE", "correct": false}, {"text": "ALTER", "correct": false}, {"text": "SELECT", "correct": false}, {"text": "DROP", "correct": true}], "correct": ["DROP"], "is_multi": false}, {"num": 69, "type": "Multiple Choice", "question": "You have a table named Customer. You need to add a new column named District. Which statement should you use?", "options": [{"text": "Option C", "correct": false}, {"text": "Option A", "correct": false}, {"text": "Option D", "correct": true}, {"text": "Option B", "correct": false}], "correct": ["Option D"], "is_multi": false}, {"num": 70, "type": "Matching", "question": "You have a database table that stores information about school attendance. Match the CourseName to the StudentName.\nInstructions: Drag the appropriate CourseName from the column on the left to its StudentName on the right.", "options": [{"text": "Reading", "correct": true}, {"text": "Math", "correct": true}, {"text": "Science", "correct": true}], "correct": ["Reading", "Math", "Science"], "is_multi": true, "match_type": "drag_drop", "pairs": [{"label": "A", "statement": "Brad", "answer": "Reading"}, {"label": "B", "statement": "Joe", "answer": "Math"}, {"label": "C", "statement": "Susan", "answer": "Science"}], "choices": ["Geography", "History", "Math", "Reading", "Science"]}, {"num": 71, "type": "Multiple Choice", "question": "You have a table that contains product IDs and product names.\nYou need to write an UPDATE statement to change the name of a specific product to glass.\nWhat should you include in the update statement?", "options": [{"text": "LET ProduetName = ‘glass’", "correct": false}, {"text": "ASSIGN ProduetName = ‘glass’", "correct": false}, {"text": "EXEC ProduetName = ‘glass’", "correct": false}, {"text": "SET ProduetName = ‘glass’", "correct": true}], "correct": ["SET ProduetName = ‘glass’"], "is_multi": false}, {"num": 72, "type": "Multiple Choice", "question": "You have a table named Student that contains 100 rows. Some of the rows have a NULL value in the FirstName column.\nYou execute the following statement:\nDELETE FROM Student\nWhat is the result?", "options": [{"text": "All rows in the table will be deleted.", "correct": true}, {"text": "You will receive an error message.", "correct": false}, {"text": "All rows containing a NULL value in the FirstName column will be deleted.", "correct": false}, {"text": "All rows and the table definition will be deleted.", "correct": false}], "correct": ["All rows in the table will be deleted."], "is_multi": false}, {"num": 73, "type": "Multiple Choice", "question": "You need to retrieve data from two related database tables based on a column that exists in both tables. Which command should you use in a query?", "options": [{"text": "JOIN", "correct": true}, {"text": "INTERSECT", "correct": false}, {"text": "TRUNCATE", "correct": false}, {"text": "UNION", "correct": false}], "correct": ["JOIN"], "is_multi": false}, {"num": 74, "type": "Multiple Choice", "question": "You have a Customer table and an Order table. You join the Customer table with the Order table by using the CustomerID column.\nThe results include:\n. All customers and their orders\n. Customers who have no orders\nWhich type of join do these results represent?", "options": [{"text": "Complete join", "correct": false}, {"text": "Outer join", "correct": true}, {"text": "Partial join", "correct": false}, {"text": "Inner join", "correct": false}], "correct": ["Outer join"], "is_multi": false}, {"num": 75, "type": "Matching", "question": "Instructions: For each of the following statements, select the appropriate answer choice.", "options": [{"text": "primary key", "correct": true}, {"text": "foreign key", "correct": true}], "correct": ["primary key", "foreign key"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "StateID is a/an [answer choice] in the State table.", "answer": "primary key"}, {"label": "B", "statement": "StateID is a/an [answer choice] in the Address table.", "answer": "foreign key"}], "choices": ["index", "union", "foreign key", "primary key"]}, {"num": 76, "type": "Matching", "question": "You have two database tables. The StateID column is unique in the State table. The AddressID column is unique in the Address table. The two tables are related by the StateID column.\nInstructions: For each statement, select Yes if true, otherwise select No.", "options": [{"text": "No", "correct": true}, {"text": "Yes", "correct": true}, {"text": "Yes", "correct": true}], "correct": ["No", "Yes", "Yes"], "is_multi": true, "match_type": "yes_no", "pairs": [{"label": "A", "statement": "Each value in a field in a table must be unique.", "answer": "No"}, {"label": "B", "statement": "Each row in a table must be unique.", "answer": "Yes"}, {"label": "C", "statement": "Each column name in a table must be unique.", "answer": "Yes"}], "choices": ["No", "Yes"]}, {"num": 77, "type": "Multiple Choice", "question": "Which key uniquely identifies a row in a table?", "options": [{"text": "local", "correct": false}, {"text": "primary", "correct": true}, {"text": "superkey", "correct": false}, {"text": "foreign", "correct": false}], "correct": ["primary"], "is_multi": false}, {"num": 78, "type": "Multiple Choice", "question": "Which of the following commands can be used to change the authorization type in DB2 9? Each correct answer represents a complete solution.", "options": [{"text": "(Choose all that apply.)", "correct": false}, {"text": "RESET DATABASE CONFIGURATION", "correct": false}, {"text": "UPDATE DATABASE CONFIGURATION", "correct": true}, {"text": "SET AUTHORIZATION", "correct": false}, {"text": "UPDATE DBM CFG", "correct": true}], "correct": ["UPDATE DATABASE CONFIGURATION", "UPDATE DBM CFG"], "is_multi": true}, {"num": 79, "type": "Multiple Choice", "question": "You are writing an SQL statement to retrieve rows from a table. Which data manipulation language (DML) command should you use?", "options": [{"text": "OUTPUT", "correct": false}, {"text": "READ", "correct": false}, {"text": "GET", "correct": false}, {"text": "SELECT", "correct": true}], "correct": ["SELECT"], "is_multi": false}, {"num": 80, "type": "Multiple Choice", "question": "You have two tables named Salesperson and Sales.\nYou need to ensure that each record in the Sales table has a valid associated salesperson record in the Salesperson table.\nWhich database object should you add to the Sales table?", "options": [{"text": "Nonclustered index", "correct": false}, {"text": "Foreign key", "correct": true}, {"text": "Clustered index", "correct": false}, {"text": "Primary key", "correct": false}], "correct": ["Foreign key"], "is_multi": false}, {"num": 81, "type": "Multiple Choice", "question": "A named group of SQL statements that can be executed in a database is called a:", "options": [{"text": "Subroutine", "correct": false}, {"text": "Formula", "correct": false}, {"text": "Method", "correct": false}, {"text": "Stored procedure", "correct": true}], "correct": ["Stored procedure"], "is_multi": false}, {"num": 82, "type": "Multiple Choice", "question": "Which constraint ensures a unique value in the ID column for each customer?", "options": [{"text": "DISTINCT", "correct": false}, {"text": "FOREIGN KEY", "correct": false}, {"text": "PRIMARY KEY", "correct": true}, {"text": "SEQUENTIAL", "correct": false}], "correct": ["PRIMARY KEY"], "is_multi": false}, {"num": 83, "type": "Multiple Choice", "question": "You need to populate a table named EmployeeCopy with data from an existing table named Employee. Which statement should you use?", "options": [{"text": "Option A", "correct": false}, {"text": "Option B", "correct": false}, {"text": "Option C", "correct": false}, {"text": "Option D", "correct": true}], "correct": ["Option D"], "is_multi": false}, {"num": 84, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct.\nViews are database objects that contain all of the data in a database.\nInstructions: Review the underlined text. If it makes the statement correct, select \"No change is needed.\" If the statement is incorrect, select the answer choice that makes the statement correct.", "options": [{"text": "Queries", "correct": false}, {"text": "No change is needed", "correct": false}, {"text": "Stored procedures", "correct": false}, {"text": "Tables", "correct": true}], "correct": ["Tables"], "is_multi": false}, {"num": 85, "type": "Multiple Choice", "question": "Which of the following is the process of creating a design for the database that will support the enterprise’s operations and objectives for the required database system?", "options": [{"text": "Application design", "correct": false}, {"text": "Database planning", "correct": false}, {"text": "Database design", "correct": true}, {"text": "Identifying relationships between objects", "correct": false}], "correct": ["Database design"], "is_multi": false}, {"num": 86, "type": "Multiple Choice", "question": "Your class project requires that you help a charity to create a website that registers volunteers.\nThe website must store the following data about the volunteers:\n. Given name\n. Surname\n. Telephone number\n. Email address\nYou need to recommend a correct way to store the data.\nWhat do you recommend?", "options": [{"text": "Create a view that contains columns that are named given name surname, phone number, and email.", "correct": false}, {"text": "Create a table that contains columns that are named given name, surname, phone number, and email.", "correct": true}, {"text": "Create a view that contains rows that are named given name surname, phone number, and email", "correct": false}, {"text": "Create a table that contains rows that are named given name, surname, phone number, and email.", "correct": false}], "correct": ["Create a table that contains columns that are named given name, surname, phone number, and email."], "is_multi": false}, {"num": 87, "type": "Multiple Choice", "question": "You have a table named Product that contains one million rows.\nYou need to search for product information in the Product table by using the product’s unique ID.\nWhat will make this type of search more efficient?", "options": [{"text": "An index", "correct": true}, {"text": "A subquery", "correct": false}, {"text": "A cursor", "correct": false}, {"text": "A trigger", "correct": false}], "correct": ["An index"], "is_multi": false}, {"num": 88, "type": "Multiple Choice", "question": "You delete rows in a table named Order. The corresponding rows in the OrderItem table are automatically deleted. This process is an example of", "options": [{"text": "a/an:", "correct": false}, {"text": "Inherited delete", "correct": false}, {"text": "Waterfall delete", "correct": false}, {"text": "Cascade delete", "correct": true}, {"text": "Functional delete", "correct": false}, {"text": "Domino delete", "correct": false}], "correct": ["Cascade delete"], "is_multi": false}, {"num": 89, "type": "Multiple Choice", "question": "John works as a Database Administrator for Bluewell Inc.\nThe company has a SQL Server database.\nA table in the database has a candidate key and an attribute that is not a constituent of the candidate key. The non-key attribute depends upon the whole of the candidate\nkey rather than just a part of it.\nWhich of the following normal forms is represented in the scenario?", "options": [{"text": "4 NF", "correct": false}, {"text": "1 NF", "correct": false}, {"text": "3 NF", "correct": false}, {"text": "2 NF", "correct": true}], "correct": ["2 NF"], "is_multi": false}, {"num": 90, "type": "Multiple Choice", "question": "Which category of SQL statements is used to add, remove, and modify database structures?", "options": [{"text": "Data control language (DCL)", "correct": false}, {"text": "Data manipulation language (DML)", "correct": false}, {"text": "Data definition language (DDL)", "correct": true}, {"text": "Data access language (DAL)", "correct": false}], "correct": ["Data definition language (DDL)"], "is_multi": false}, {"num": 91, "type": "Multiple Choice", "question": "A database contains two tables named Customer and Order.\nYou execute the following statement:\nDELETE FROM Order\nWHERE CustomerID = 209\nWhat is the result?", "options": [{"text": "The first order for CustomerID 209 is deleted from the Order table.", "correct": false}, {"text": "All orders for CustomerID 209 are deleted from the Order table, and CustomerID 209 is deleted from the Customer table.", "correct": false}, {"text": "All orders for CustomerID 209 are deleted from the Order table.", "correct": true}, {"text": "CustomerID 209 is deleted from the Customer table.", "correct": false}], "correct": ["All orders for CustomerID 209 are deleted from the Order table."], "is_multi": false}, {"num": 92, "type": "Multiple Choice", "question": "You are creating a table to store customer data. The AccountNumber column uses values that always consist of one letter and four digits. Which data type should you use for the AccountNumber column?", "options": [{"text": "BYTE", "correct": false}, {"text": "DOUBLE", "correct": false}, {"text": "SMALLINT", "correct": false}, {"text": "CHAR", "correct": true}], "correct": ["CHAR"], "is_multi": false}, {"num": 93, "type": "Multiple Choice", "question": "Which command should you use to add a column to an existing table?", "options": [{"text": "ALTER", "correct": true}, {"text": "UPDATE", "correct": false}, {"text": "INSERT", "correct": false}, {"text": "MODIFY", "correct": false}, {"text": "CHANGE", "correct": false}], "correct": ["ALTER"], "is_multi": false}, {"num": 94, "type": "Multiple Choice", "question": "Fill in the blank with the appropriate word.", "options": [{"text": "The _______________ model for database management is a database model based on first-order predicate logic.", "correct": false}, {"text": "Truncate", "correct": false}, {"text": "Relational", "correct": true}, {"text": "Traditional", "correct": false}], "correct": ["Relational"], "is_multi": false}, {"num": 95, "type": "Multiple Choice", "question": "Before running a DELETE statement, it is always a good idea to run a(n) ____________ statement on the table that is about to be changed.", "options": [{"text": "SELECT", "correct": true}, {"text": "DROP", "correct": false}, {"text": "INSERT", "correct": false}, {"text": "UPDATE", "correct": false}], "correct": ["SELECT"], "is_multi": false}, {"num": 96, "type": "Multiple Choice", "question": "You need to store product quantities, and you want to minimize the amount of storage space that is used. Which data type should you use?", "options": [{"text": "FLOAT", "correct": false}, {"text": "COUNT", "correct": false}, {"text": "INTEGER", "correct": true}, {"text": "DOUBLE", "correct": false}], "correct": ["INTEGER"], "is_multi": false}, {"num": 97, "type": "Multiple Choice", "question": "Mark works as a Database Administrator for VCEplus Inc.\nThe company has a SQL Server database.\nManagement instructs him to ensure that no inconsistent data is entered in the database.\nWhich of the following will help him to accomplish the task?", "options": [{"text": "Native auditing", "correct": false}, {"text": "at eaudt g", "correct": false}, {"text": "Encryption", "correct": false}, {"text": "Abstraction", "correct": false}, {"text": "Authentication", "correct": false}, {"text": "Referential integrity", "correct": true}], "correct": ["Referential integrity"], "is_multi": false}, {"num": 98, "type": "Multiple Choice", "question": "Linda works as a Database Designer for Lion Inc.\nShe has been given an assignment to design the database of a publishing company.\nThe database has a table named Author, which has a composite key, AuthorID and TitleID. Royalty and LiteraryAgent are the other attributes.\nThe functional dependencies are such that AuthorID + TitleID-> Royalty (i.e. Royalty is functionally dependent on AuthorID and TitleID) and AuthorID-> LiteraryAgent (i.e.\nLiteraryAgent is functionally dependent on AuthorID).\nWhich of the following is true about this table?", "options": [{"text": "It violates 2 NF.", "correct": true}, {"text": "It violates 4 NF.", "correct": false}, {"text": "There is no violation.", "correct": false}, {"text": "It violates 1 NF.", "correct": false}], "correct": ["It violates 2 NF."], "is_multi": false}, {"num": 99, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct.\nIn a database table, each column represents a unique record.\nInstructions: Review the underlined text. If it makes the statement correct, select \"No change is needed.\" If the statement is incorrect, select the answer choice that makes the statement correct.", "options": [{"text": "Table", "correct": false}, {"text": "No change is needed", "correct": false}, {"text": "Index", "correct": false}, {"text": "Row", "correct": true}], "correct": ["Row"], "is_multi": false}, {"num": 100, "type": "Multiple Choice", "question": "Smith works as a Database Administrator for DWorlds Inc.\nThe management instructs him to plan a database where identifying the key objects or entities for database management is important.\nWhich of the following database planning steps will help him to accomplish the task?", "options": [{"text": "Object modeling", "correct": false}, {"text": "Gathering information", "correct": false}, {"text": "Object identification", "correct": true}, {"text": "Identifying the relationships between objects", "correct": false}], "correct": ["Object identification"], "is_multi": false}, {"num": 101, "type": "Multiple Choice", "question": "The component that holds information for a single entry in a table is called a:", "options": [{"text": "COLUMN", "correct": false}, {"text": "ROW", "correct": true}, {"text": "DATA TYPE", "correct": false}, {"text": "VIEW", "correct": false}], "correct": ["ROW"], "is_multi": false}, {"num": 102, "type": "Matching", "question": "Instructions: For each of the following statements, select Yes if the statement is true. Otherwise, select No.", "options": [{"text": "No", "correct": true}, {"text": "Yes", "correct": true}, {"text": "Yes", "correct": true}], "correct": ["No", "Yes", "Yes"], "is_multi": true, "match_type": "yes_no", "pairs": [{"label": "A", "statement": "The VARCHAR data type contains only numeric characters.", "answer": "No"}, {"label": "B", "statement": "The NUMERIC data type contains only numbers that have decimal places.", "answer": "Yes"}, {"label": "C", "statement": "The INT data type contains only whole numbers.", "answer": "Yes"}], "choices": ["No", "Yes"]}, {"num": 103, "type": "Matching", "question": "You have a user that has server roles as defined below. Instructions: Use the drop-down menus to select the answer choice that completes each statement.", "options": [{"text": "unlimited", "correct": true}, {"text": "unlimited", "correct": true}], "correct": ["unlimited", "unlimited"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "The user can perform [answer choice] actions on data that is on the server.", "answer": "unlimited"}, {"label": "B", "statement": "The user can perform [answer choice] actions on database objects that are on the server.", "answer": "unlimited"}], "choices": ["no", "unlimited", "configuration", "read-only"]}, {"num": 104, "type": "Multiple Choice", "question": "One reason to create a stored procedure is to:", "options": [{"text": "Give the user control of the query logic.", "correct": false}, {"text": "Bypass case sensitivity requirements.", "correct": false}, {"text": "Improve performance.", "correct": true}, {"text": "Minimize storage space.", "correct": false}], "correct": ["Improve performance."], "is_multi": false}, {"num": 105, "type": "Multiple Choice", "question": "You have a table named Employee that includes four columns. You execute the following statement:\nSELECT *\nFROM Employee\nWhich columns are returned?", "options": [{"text": "only the first and last columns", "correct": false}, {"text": "only the last column", "correct": false}, {"text": "all columns", "correct": true}, {"text": "only the first column", "correct": false}], "correct": ["all columns"], "is_multi": false}, {"num": 106, "type": "Multiple Choice", "question": "Which of the following values cannot be stored in a character column defined as the primary key of a table?", "options": [{"text": "'0'", "correct": false}, {"text": "'null'", "correct": false}, {"text": "null", "correct": true}, {"text": "\"", "correct": false}], "correct": ["null"], "is_multi": false}, {"num": 107, "type": "Multiple Choice", "question": "Consider the case of a fruit juice company.", "options": [{"text": "The company manufactures fruit juices and supplies them to wholesalers.", "correct": false}, {"text": "The Database Designer creates a table named Production.", "correct": false}, {"text": "The code is given below:", "correct": false}, {"text": "1.CREATE Table Production", "correct": false}, {"text": "2.(Fruit_type VarChar,", "correct": false}, {"text": "3.Fruit_name Char(20),", "correct": false}, {"text": "4.Quantity Int(3))", "correct": false}, {"text": "Which of the above-mentioned lines has an error?", "correct": false}, {"text": "Line 4", "correct": false}, {"text": "Line 3", "correct": false}, {"text": "Line 2", "correct": true}, {"text": "Line 1", "correct": false}], "correct": ["Line 2"], "is_multi": false}, {"num": 108, "type": "Multiple Choice", "question": "You have a table that contains the following data.", "options": [{"text": "You break the table into the following two tables.", "correct": false}, {"text": "This process is referred to as:", "correct": false}, {"text": "denormalization", "correct": false}, {"text": "defragmentation", "correct": false}, {"text": "normalization", "correct": true}, {"text": "fragmentation", "correct": false}], "correct": ["normalization"], "is_multi": false}, {"num": 109, "type": "Multiple Choice", "question": "You need to establish a set of permissions that you can routinely assign to new users. What should you create?", "options": [{"text": "List", "correct": false}, {"text": "Role", "correct": true}, {"text": "Resource", "correct": false}, {"text": "Group", "correct": false}], "correct": ["Role"], "is_multi": false}, {"num": 110, "type": "Multiple Choice", "question": "You have a database that contains 10 terabytes of data. You need to back up the database every two hours. Which type of backup should you use?", "options": [{"text": "incremental", "correct": true}, {"text": "archive", "correct": false}, {"text": "partial", "correct": false}, {"text": "full", "correct": false}], "correct": ["incremental"], "is_multi": false}, {"num": 111, "type": "Multiple Choice", "question": "Which keyword would you use in a select statement to return rows that meet a specific condition?", "options": [{"text": "ORDER BY", "correct": false}, {"text": "WHERE", "correct": true}, {"text": "FROM", "correct": false}, {"text": "UNION", "correct": false}], "correct": ["WHERE"], "is_multi": false}, {"num": 112, "type": "Multiple Choice", "question": "You have the following table definition:\nCREATE TABLE Product (ProductID INTEGER, Name VARCHAR(20))\nYou need to insert a new product. The product’s name is Plate and the product’s ID is 12345.\nWhich statement should you use?", "options": [{"text": "Option A", "correct": false}, {"text": "Option C", "correct": false}, {"text": "Option B", "correct": false}, {"text": "Option D", "correct": true}], "correct": ["Option D"], "is_multi": false}, {"num": 113, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct.\nA view can be used to ensure referential integrity.\nInstructions: Review the underlined text. If it makes the statement correct, select \"No change is needed.\" If the statement is incorrect, select the answer choice that makes the statement correct.", "options": [{"text": "Limit access to specific rows or columns of data in a table.", "correct": true}, {"text": "Save historical data before deleting it from the base table.", "correct": false}, {"text": "No change is needed.", "correct": false}, {"text": "Save an extra copy of data stored in a separate table.", "correct": false}], "correct": ["Limit access to specific rows or columns of data in a table."], "is_multi": false}, {"num": 114, "type": "Multiple Choice", "question": "You need to enable a new employee to authenticate to your database. Which command should you use?", "options": [{"text": "INSERT USER", "correct": false}, {"text": "ADD USER", "correct": false}, {"text": "ALLOW USER", "correct": false}, {"text": "CREATE USER", "correct": true}, {"text": "ALTER USER", "correct": false}], "correct": ["CREATE USER"], "is_multi": false}, {"num": 115, "type": "Multiple Choice", "question": "What are three valid data manipulation language (DML) commands? (Choose three.)", "options": [{"text": "INSERT", "correct": true}, {"text": "OUTPUT", "correct": false}, {"text": "UPDATE", "correct": true}, {"text": "DELETE", "correct": true}, {"text": "COMMIT", "correct": false}], "correct": ["INSERT", "UPDATE", "DELETE"], "is_multi": true}, {"num": 116, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct.\nUse indexing to create, remove, or change database objects.\nInstructions: Review the underlined text. If it makes the statement correct, select \"No change is needed.\" If the statement is incorrect, select the answer choice that makes the statement correct.", "options": [{"text": "Data definition language (DDL) statements", "correct": true}, {"text": "No change is needed.", "correct": false}, {"text": "A unique constraint", "correct": false}, {"text": "Data manipulation language (DML) statements", "correct": false}], "correct": ["Data definition language (DDL) statements"], "is_multi": false}, {"num": 117, "type": "Multiple Choice", "question": "The Product table contains the following data.\nYou execute the following statement:\nSELECT COUNT(*)\nFROM Product WHERE Quantity > 18\nWhat is the value returned by this statement?", "options": [{"text": "3", "correct": true}, {"text": "2", "correct": false}, {"text": "4", "correct": false}, {"text": "1", "correct": false}], "correct": ["3"], "is_multi": false}, {"num": 118, "type": "Matching", "question": "You have a database table that stores information about school attendance with columns: StudentName, GradeLevel, DaysAbsent.\nMatch the data types to the column names.", "options": [{"text": "VARCHAR", "correct": true}, {"text": "INT", "correct": true}, {"text": "DECIMAL", "correct": true}], "correct": ["VARCHAR", "INT", "DECIMAL"], "is_multi": true, "match_type": "drag_drop", "pairs": [{"label": "A", "statement": "StudentName", "answer": "VARCHAR"}, {"label": "B", "statement": "GradeLevel", "answer": "INT"}, {"label": "C", "statement": "DaysAbsent", "answer": "DECIMAL"}], "choices": ["BIT", "DATETIME", "DECIMAL", "INT", "VARCHAR", "CHAR"]}, {"num": 119, "type": "Multiple Choice", "question": "You have a database table that contains the following columns:", "options": [{"text": "You must insert the following record into the table:", "correct": false}, {"text": "Which two Structured Query Language (SQL) statements can you use? (Choose two.)", "correct": false}, {"text": "Option B", "correct": true}, {"text": "Option A", "correct": false}, {"text": "Option C", "correct": true}, {"text": "Option D", "correct": false}], "correct": ["Option B", "Option C"], "is_multi": true}, {"num": 120, "type": "Multiple Choice", "question": "Which command removes a table from a database?", "options": [{"text": "DROP TABLE", "correct": true}, {"text": "ELIMINATE TABLE", "correct": false}, {"text": "CLEAR TABLE", "correct": false}, {"text": "DELETE TABLE", "correct": false}], "correct": ["DROP TABLE"], "is_multi": false}, {"num": 121, "type": "Multiple Choice", "question": "You execute a statement inside a transaction to delete 100 rows from a table. The transaction fails after only 40 rows are deleted. What is the result in the database?", "options": [{"text": "The transaction will restart.", "correct": false}, {"text": "The table will be corrupted.", "correct": false}, {"text": "Forty (40) rows will be deleted from the table.", "correct": false}, {"text": "No rows will be deleted from the table.", "correct": true}], "correct": ["No rows will be deleted from the table."], "is_multi": false}, {"num": 122, "type": "Multiple Choice", "question": "You manage a large database named Sales.\nThe Sales database contains a table named OrderDetails, which is a heavily transacted table with frequent inserts.\nIndexes in the table often become fragmented due to excessive page splitting.\nYou want to minimize the amount of fragmentation due to page splits.\nWhat should you do?", "options": [{"text": "Change the fillfactor for the indexes to 0.", "correct": false}, {"text": "Change the fillfactor for the indexes to 60.", "correct": true}, {"text": "Change the fillfactor for the indexes to 100", "correct": false}, {"text": "Update the statistics on the indexes.", "correct": false}], "correct": ["Change the fillfactor for the indexes to 60."], "is_multi": false}, {"num": 123, "type": "Matching", "question": "The following illustration shows the structure of a clustered index in a single partition.\nInstructions: Use the drop-down menus to select the answer choice that completes each statement.", "options": [{"text": "clustered index", "correct": true}, {"text": "non-clustered index", "correct": true}], "correct": ["clustered index", "non-clustered index"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "Adding a [answer choice] on the FlightNumber column physically sorts rows in the table by FlightNumber.", "answer": "clustered index"}, {"label": "B", "statement": "Adding a [answer choice] on the Airline column retrieves data faster, but will not physically sort rows in the table by Airline.", "answer": "non-clustered index"}], "choices": ["foreign key", "clustered index", "non-clustered index"]}, {"num": 124, "type": "Multiple Choice", "question": "You need to combine the results of two queries into a single result that contains all of the rows from both queries. Which Structured Query Language (SQL) statement should you use?", "options": [{"text": "UNION", "correct": true}, {"text": "TRUNCATE", "correct": false}, {"text": "EXCEPT", "correct": false}, {"text": "JOIN", "correct": false}], "correct": ["UNION"], "is_multi": false}, {"num": 125, "type": "Multiple Choice", "question": "What statement is used to change existing data?", "options": [{"text": "MODIFY", "correct": false}, {"text": "CHANGE", "correct": false}, {"text": "NEW", "correct": false}, {"text": "UPDATE", "correct": true}], "correct": ["UPDATE"], "is_multi": false}, {"num": 126, "type": "Multiple Choice", "question": "Which of the following scripts is used to convert Unix-type zone files into SQL statements, and loads the time zone tables in a mysql database?", "options": [{"text": "mysql_time_to_sql", "correct": false}, {"text": "mysql_timezone_to_sql", "correct": false}, {"text": "mysql_tz_to_sql", "correct": false}, {"text": "mysql_tzinfo_to_sql", "correct": true}], "correct": ["mysql_tzinfo_to_sql"], "is_multi": false}, {"num": 127, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. Use the FROM keyword in a SELECT statement to return rows that meet a specific condition. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "WHERE", "correct": true}, {"text": "ORDER BY", "correct": false}, {"text": "UNION", "correct": false}, {"text": "No change is needed", "correct": false}], "correct": ["WHERE"], "is_multi": false}, {"num": 128, "type": "Multiple Choice", "question": "One error that may occur when manipulating data is a missing _______:", "options": [{"text": "table", "correct": false}, {"text": "keyword", "correct": true}, {"text": "column", "correct": false}, {"text": "query", "correct": false}], "correct": ["keyword"], "is_multi": false}, {"num": 129, "type": "Matching", "question": "You need to set up a database to provide a view of North American mammals. Match the SQL statements to the SQL query.\nInstructions: Drag the appropriate SQL statement from the left to its place in the SQL query on the right.", "options": [{"text": "CREATE VIEW [dbo].[NorthAmericanMammals_View]", "correct": true}, {"text": "AS SELECT a.Id, a.Name", "correct": true}, {"text": "FROM Animal a", "correct": true}], "correct": ["CREATE VIEW [dbo].[NorthAmericanMammals_View]", "AS SELECT a.Id, a.Name", "FROM Animal a"], "is_multi": true, "match_type": "drag_drop", "pairs": [{"label": "A", "statement": "First Code Segment", "answer": "CREATE VIEW [dbo].[NorthAmericanMammals_View]"}, {"label": "B", "statement": "Second Code Segment", "answer": "AS SELECT a.Id, a.Name"}, {"label": "C", "statement": "Third Code Segment", "answer": "FROM Animal a"}], "choices": ["CREATE VIEW [dbo].[NorthAmericanMammals_View]", "GENERATE VIEW [dbo].[NorthAmericanMammals_View]", "AS JOIN a.Id, a.Name", "AS SELECT a.Id, a.Name", "FROM Animal a", "JOIN Animal a"]}, {"num": 130, "type": "Multiple Choice", "question": "You accept an IT internship at a local charity. The charity has two tables in their data model named Chapter and Language, as defined below: You create a third table named ChapterLanguage to relate the Chapter table and the Language table. You need to select columns from the Chapter and Language tables to create a composite primary key for the ChapterLanguage table. Which two columns should you select? (Choose two.)", "options": [{"text": "City", "correct": false}, {"text": "LanguageId", "correct": true}, {"text": "ChapterId", "correct": true}, {"text": "Region", "correct": false}, {"text": "Country", "correct": false}, {"text": "LanguageName", "correct": false}], "correct": ["LanguageId", "ChapterId"], "is_multi": true}, {"num": 131, "type": "Matching", "question": "Your class project requires that you help a charity set up a website that collects volunteer information. Given the CREATE TABLE statement below, match the data types to each Code Segment.\n\nCREATE TABLE [dbo].[Volunteer]\n(\n  [Id] Code Segment 1\n  [GivenName] NCHAR(255) NULL,\n  [Surname] NCHAR(255) NULL,\n  [DateOfBirth] Code Segment 2\n  [PhoneNumber] NCHAR(10) NULL,\n  [Photo] Code Segment 3\n)", "options": [{"text": "INT NOT NULL PRIMARY KEY,", "correct": true}, {"text": "DATE NULL,", "correct": true}, {"text": "IMAGE NULL,", "correct": true}], "correct": ["INT NOT NULL PRIMARY KEY,", "DATE NULL,", "IMAGE NULL,"], "is_multi": true, "match_type": "drag_drop", "pairs": [{"label": "A", "statement": "Code Segment 1 (Id column)", "answer": "INT NOT NULL PRIMARY KEY,"}, {"label": "B", "statement": "Code Segment 2 (DateOfBirth column)", "answer": "DATE NULL,"}, {"label": "C", "statement": "Code Segment 3 (Photo column)", "answer": "IMAGE NULL,"}], "choices": ["TIMESTAMP NULL,", "DATE NULL,", "IMAGE NULL,", "XML NULL,", "INT NOT NULL PRIMARY KEY,", "INT NOT NULL FOREIGN KEY,"]}, {"num": 132, "type": "Multiple Choice", "question": "Your Company is designing and developing a number of databases for a stock exchange. One of the databases will contain highly sensitive data for which high level of security will be required. Although high processing speed is one of the prime requirements of the customer, for this database, security of the data will take priority over the processing speed. It needs to be ensured that even if unauthorized access to the database is\nobtained, the rogue user is unable to read the data.\nWhich of the following protection techniques will you suggest for this database?", "options": [{"text": "Encryption", "correct": true}, {"text": "Authentication", "correct": false}, {"text": "Integrity controls", "correct": false}, {"text": "Native auditing", "correct": false}], "correct": ["Encryption"], "is_multi": false}, {"num": 133, "type": "Multiple Choice", "question": "You need to insert two new products into the Product table. The first product is named Book and has an ID of 125. The second product is named\nMovie and has an ID of 126.\nWhich statement should you use?", "options": [{"text": "Option A", "correct": false}, {"text": "Option B", "correct": true}, {"text": "Option D", "correct": false}, {"text": "Option C", "correct": false}], "correct": ["Option B"], "is_multi": false}, {"num": 134, "type": "Matching", "question": "The following graphic shows the components of a SQL Server application accessed through Internet Explorer.\nInstructions: Use the drop-down menus to select the answer choice that completes each statement.", "options": [{"text": "return large result sets", "correct": true}, {"text": "are accessed sequentially", "correct": true}], "correct": ["return large result sets", "are accessed sequentially"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "A clustered index improves the performance of queries that [answer choice].", "answer": "return large result sets"}, {"label": "B", "statement": "A clustered index improves the performance of queries on columns that [answer choice].", "answer": "are accessed sequentially"}], "choices": ["return large result sets", "return a range of values by using the = operator", "do not use ORDER BY or GROUP BY clauses", "are accessed randomly", "are accessed sequentially", "are not unique or contain many common values"]}, {"num": 135, "type": "Multiple Choice", "question": "What is the relationship between the foreign key and primary key? Each correct answer represents a complete solution. (Choose all that apply.)", "options": [{"text": "There is no relationship between a primary key and a foreign key.", "correct": false}, {"text": "A foreign key and a primary key create a link between two entities.", "correct": false}, {"text": "A foreign key constraint works in conjunction with a primary key constraint to enforce referential integrity among related", "correct": false}, {"text": "entities.", "correct": false}, {"text": "A foreign key ties attribute(s) of an entity to the primary key of another entity, for the purpose of creating a dependency.", "correct": true}], "correct": ["A foreign key ties attribute(s) of an entity to the primary key of another entity, for the purpose of creating a dependency."], "is_multi": false}, {"num": 136, "type": "Multiple Choice", "question": "Which of the following database terms is described in the statement below?", "options": [{"text": "It prevents the current database operation from reading or writing a data item while the data item is being accessed by another operation.", "correct": false}, {"text": "Deadlock", "correct": false}, {"text": "Constraint", "correct": false}, {"text": "Lock", "correct": true}, {"text": "Encryption", "correct": false}], "correct": ["Lock"], "is_multi": false}, {"num": 137, "type": "Multiple Choice", "question": "The terms “bitmap,” “b-tree,” and “hash” refer to which type of database structure?", "options": [{"text": "Index", "correct": true}, {"text": "Stored procedure", "correct": false}, {"text": "Trigger", "correct": false}, {"text": "View", "correct": false}, {"text": "Function", "correct": false}], "correct": ["Index"], "is_multi": false}, {"num": 138, "type": "Multiple Choice", "question": "You have the database table named Cars as defined below:\nYou have the following Structured Query Language (SQL) statement:\nHow many rows are returned by the SQL statement?", "options": [{"text": "7", "correct": false}, {"text": "6", "correct": false}, {"text": "5", "correct": false}, {"text": "4", "correct": true}], "correct": ["4"], "is_multi": false}, {"num": 139, "type": "Multiple Choice", "question": "You want to recover one or more tablespaces to a point in time older than the rest of the database. Which of the following are the recovery situations in which tablespace Point-in-Time Recovery (TSPITR) should be used?", "options": [{"text": "Each correct answer represents a part of the solution. (Choose all that apply.)", "correct": false}, {"text": "To recover a DML statement that has affected only a subset of the database", "correct": true}, {"text": "To recover a tablespace that contains rollback segments", "correct": true}, {"text": "To recover a tablespace on a very large database.", "correct": false}, {"text": "To recover a table that has become logically corrupted", "correct": true}], "correct": ["To recover a DML statement that has affected only a subset of the database", "To recover a tablespace that contains rollback segments", "To recover a table that has become logically corrupted"], "is_multi": true}, {"num": 140, "type": "Multiple Choice", "question": "In which situation do you need to perform a restore on a database?", "options": [{"text": "when you encounter an error in your application", "correct": false}, {"text": "When you need to roll back a transaction", "correct": false}, {"text": "when data needs to be deleted from the database", "correct": false}, {"text": "when data becomes corrupted in the database", "correct": true}], "correct": ["when data becomes corrupted in the database"], "is_multi": false}, {"num": 141, "type": "Multiple Choice", "question": "You have the following table definition:\nCREATE TABLE Product (ID INTEGER PRIMARY KEY, Name VARCHAR(20), Quantity INTEGER)\nThe Product table contains the following data.\nYou execute the following statement:\nSELECT Name FROM Product WHERE Quantity IS NOT NULL\nHow many rows are returned?", "options": [{"text": "3", "correct": true}, {"text": "1", "correct": false}, {"text": "4", "correct": false}, {"text": "2", "correct": false}, {"text": "0", "correct": false}], "correct": ["3"], "is_multi": false}, {"num": 142, "type": "Multiple Choice", "question": "Which of the following can be used to populate a table? Each correct answer represents a complete solution. (Choose all that apply.)", "options": [{"text": "Data Pump", "correct": true}, {"text": "SQL*Loader", "correct": true}, {"text": "INSERT statement", "correct": true}, {"text": "MERGE statement", "correct": true}], "correct": ["Data Pump", "SQL*Loader", "INSERT statement", "MERGE statement"], "is_multi": true}, {"num": 143, "type": "Multiple Choice", "question": "What is one difference between an update statement and a delete statement?", "options": [{"text": "A delete statement works only within a stored procedure.", "correct": false}, {"text": "An update statement can change only one row.", "correct": false}, {"text": "An update statement does not remove rows from a table.", "correct": true}, {"text": "A delete statement cannot use a where clause.", "correct": false}], "correct": ["An update statement does not remove rows from a table."], "is_multi": false}, {"num": 144, "type": "Multiple Choice", "question": "Whi h f h f ll i h f i i ?E h l l i (Ch ) Which of the following are the types of prototyping strategies? Each correct answer represents a complete solution. (Choose two.)", "options": [{"text": "Physical prototyping", "correct": false}, {"text": "Evolutionary prototyping", "correct": true}, {"text": "Revolutionary prototyping", "correct": false}, {"text": "Requirements prototyping", "correct": true}], "correct": ["Evolutionary prototyping", "Requirements prototyping"], "is_multi": true}, {"num": 145, "type": "Multiple Choice", "question": "Which keyword can be used in a create table statement?", "options": [{"text": "ORDER BY", "correct": false}, {"text": "UNIQUE", "correct": true}, {"text": "GROUP BY", "correct": false}, {"text": "DISTINCT", "correct": false}], "correct": ["UNIQUE"], "is_multi": false}, {"num": 146, "type": "Multiple Choice", "question": "Which of the following DML SQL statements support usage of correlated sub-queries? Each correct answer represents a complete solution.", "options": [{"text": "(Choose all that apply.)", "correct": false}, {"text": "INSERT", "correct": false}, {"text": "SELECT", "correct": true}, {"text": "DELETE", "correct": true}, {"text": "UPDATE", "correct": true}], "correct": ["SELECT", "DELETE", "UPDATE"], "is_multi": true}, {"num": 147, "type": "Multiple Choice", "question": "What statement is used to insert values into a table?", "options": [{"text": "ADD INTO ... VALUES", "correct": false}, {"text": "ADD VALUES", "correct": false}, {"text": "INSERT VALUES ... INTO", "correct": false}, {"text": "INSERT INTO ... VALUES", "correct": true}], "correct": ["INSERT INTO ... VALUES"], "is_multi": false}, {"num": 148, "type": "Multiple Choice", "question": "Which of the following steps in database planning helps to determine the requirements of the database through interviewing?", "options": [{"text": "Gathering information", "correct": true}, {"text": "Identifying the objects", "correct": false}, {"text": "Identifying the type of information for each object", "correct": false}, {"text": "Identifying the relationship between objects", "correct": false}, {"text": "Modeling the object", "correct": false}], "correct": ["Gathering information"], "is_multi": false}, {"num": 149, "type": "Multiple Choice", "question": "Denormalization is performed in order to:", "options": [{"text": "Eliminate repeating groups.", "correct": false}, {"text": "Improve query performance.", "correct": true}, {"text": "Reduce redundancy.", "correct": false}, {"text": "Create smaller tables.", "correct": false}], "correct": ["Improve query performance."], "is_multi": false}, {"num": 150, "type": "Multiple Choice", "question": "You work as a Database Administrator for Bell Ceramics Inc.", "options": [{"text": "An employee of the company has fired a query, including a DML statement, such as INSERT, against a table named Sales.", "correct": false}, {"text": "You notice that the DML statement has not executed.", "correct": false}, {"text": "What will you do to resolve the issue? Each correct answer represents a complete solution. (Choose two.)", "correct": false}, {"text": "", "correct": false}, {"text": "Add more space to the tablespace and increase the users quota on the tablespace.", "correct": true}, {"text": "Provide an appropriate privilege or create views on the Sales table, and grant privileges on the view.", "correct": true}, {"text": "Provide redundant network paths from the client computer to the server along with additional listener connections on the", "correct": false}, {"text": "", "correct": false}, {"text": "Oracle server and redundant network cards on the Oracle server.", "correct": false}, {"text": "Clean up all the uncommitted transactions on the Sales table.", "correct": false}], "correct": ["Add more space to the tablespace and increase the users quota on the tablespace.", "Provide an appropriate privilege or create views on the Sales table, and grant privileges on the view."], "is_multi": true}, {"num": 151, "type": "Multiple Choice", "question": "You need to add rows to a database table. Which Structured Query Language (SQL) keyword should you use?", "options": [{"text": "JOIN", "correct": false}, {"text": "CREATE", "correct": false}, {"text": "INSERT", "correct": true}, {"text": "UPDATE", "correct": false}], "correct": ["INSERT"], "is_multi": false}, {"num": 152, "type": "Multiple Choice", "question": "What is the ideal time to back up dynamic log files?", "options": [{"text": "When the server is shut down.", "correct": false}, {"text": "You can back up dynamic log files any time.", "correct": false}, {"text": "When the server is stopped.", "correct": true}, {"text": "When the server is running.", "correct": false}], "correct": ["When the server is stopped."], "is_multi": false}, {"num": 153, "type": "Multiple Choice", "question": "You have a table that contains information about all students in your school. Which SQL keyword should you use to change a student’s first name in the table?", "options": [{"text": "SELECT", "correct": false}, {"text": "SELECT", "correct": false}, {"text": "UPDATE", "correct": true}, {"text": "CHANGE", "correct": false}, {"text": "INSERT", "correct": false}], "correct": ["UPDATE"], "is_multi": false}, {"num": 154, "type": "Matching", "question": "You have a user with server roles. Instructions: Use the drop-down menus to select the answer choice that completes each statement.", "options": [{"text": "more", "correct": true}, {"text": "less", "correct": true}], "correct": ["more", "less"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "Using the simple recovery model for database backups provides [answer choice] work-loss exposure than the full recovery model.", "answer": "more"}, {"label": "B", "statement": "Using the simple recovery model for database backups provides [answer choice] log file backups than the full recovery model.", "answer": "less"}], "choices": ["less", "more", "the same"]}, {"num": 155, "type": "Multiple Choice", "question": "You work as a MySQL Database Administrator.\nYour server crashed and it was recovered and made online within half an hour.\nWhat will you do to ensure that the table structure and contents are in a proper state?", "options": [{"text": "Perform a table optimization operation.", "correct": false}, {"text": "Perform a table repair operation.", "correct": false}, {"text": "Perform a table analysis operation.", "correct": false}, {"text": "Perform a table check operation.", "correct": true}], "correct": ["Perform a table check operation."], "is_multi": false}, {"num": 156, "type": "Multiple Choice", "question": "Which of the following provides reliable units of work that allow correct recovery from failures and keeps a database consistent even in cases of system failure?", "options": [{"text": "Database transaction", "correct": true}, {"text": "Concurrency control", "correct": false}, {"text": "Database security", "correct": false}, {"text": "Two-phase commit", "correct": false}], "correct": ["Database transaction"], "is_multi": false}, {"num": 157, "type": "Multiple Choice", "question": "Which of the following is the process of extracting trails on a regular basis so that they can be transferred to a designated security system where the database administrators do not have access?", "options": [{"text": "Encryption", "correct": false}, {"text": "Native auditing", "correct": true}, {"text": "Abstraction", "correct": false}, {"text": "Database security", "correct": false}], "correct": ["Native auditing"], "is_multi": false}, {"num": 158, "type": "Multiple Choice", "question": "Which of the following is a building working model of a database system?", "options": [{"text": "Prototyping", "correct": true}, {"text": "Bottom-up approach", "correct": false}, {"text": "Conceptual database design", "correct": false}, {"text": "Top-down approach", "correct": false}], "correct": ["Prototyping"], "is_multi": false}, {"num": 159, "type": "Multiple Choice", "question": "You need to delete a database table. Which data definition language (DDL) keyword should you use?", "options": [{"text": "ALTER", "correct": false}, {"text": "DROP", "correct": true}, {"text": "TRUNCATE", "correct": false}, {"text": "DELETE", "correct": false}], "correct": ["DROP"], "is_multi": false}, {"num": 160, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. Use the ALLOW SELECT command to give a user permission to read the data in a table. Instructions: Review the underlined text. If it makes the statement correct, select “No change is needed.” If the statement is incorrect, select the answer choice that makes", "options": [{"text": "LET HEAD", "correct": false}, {"text": "GRANT SELECT", "correct": true}, {"text": "No change is needed", "correct": false}, {"text": "PERMIT READ", "correct": false}], "correct": ["GRANT SELECT"], "is_multi": false}, {"num": 161, "type": "Multiple Choice", "question": "To change a view, with what keyword should CREATE in the CREATE VIEW command be replaced?", "options": [{"text": "UPDATE", "correct": false}, {"text": "REPLACE", "correct": false}, {"text": "ALTER", "correct": true}, {"text": "CHANGE", "correct": false}], "correct": ["ALTER"], "is_multi": false}, {"num": 162, "type": "Multiple Choice", "question": "One error that may occur is attempting to retrieve data with a well-written query but against the wrong ________.", "options": [{"text": "row", "correct": false}, {"text": "table", "correct": false}, {"text": "column", "correct": false}, {"text": "database", "correct": true}], "correct": ["database"], "is_multi": false}, {"num": 163, "type": "Multiple Choice", "question": "What clause should always be included in an UPDATE statement?", "options": [{"text": "GROUP BY", "correct": false}, {"text": "WHERE", "correct": true}, {"text": "FROM", "correct": false}, {"text": "HAVING", "correct": false}], "correct": ["WHERE"], "is_multi": false}, {"num": 164, "type": "Multiple Choice", "question": "Your database contains a table named Customer.\nYou need to delete the record from the Customer table that has a CustomerID of 12345.\nWhich statement should you use?", "options": [{"text": "Option B", "correct": false}, {"text": "Option A", "correct": false}, {"text": "Option C", "correct": false}, {"text": "Option D", "correct": true}], "correct": ["Option D"], "is_multi": false}, {"num": 165, "type": "Multiple Choice", "question": "In addition to taking backups of your databases, you should also backup up files stated below. Which of these files store updates that have been made after the backup was made?", "options": [{"text": "Binary log files", "correct": true}, {"text": "My.ini", "correct": false}, {"text": "My.cnf", "correct": false}, {"text": "Master.info", "correct": false}], "correct": ["Binary log files"], "is_multi": false}, {"num": 166, "type": "Multiple Choice", "question": "Which of the following are DML commands? Each correct answer represents a complete solution. (Choose all that apply.)", "options": [{"text": "SELECT", "correct": false}, {"text": "INSERT", "correct": true}, {"text": "ALTER", "correct": false}, {"text": "DELETE", "correct": true}, {"text": "SELECT INTO", "correct": true}, {"text": "UPDATE", "correct": true}], "correct": ["INSERT", "DELETE", "SELECT INTO", "UPDATE"], "is_multi": true}, {"num": 167, "type": "Multiple Choice", "question": "Data in a database is stored in:", "options": [{"text": "Stored procedures", "correct": false}, {"text": "Queries", "correct": false}, {"text": "Data types", "correct": false}, {"text": "Tables", "correct": true}], "correct": ["Tables"], "is_multi": false}, {"num": 168, "type": "Matching", "question": "Instructions: For each of the following statements, select Yes if the statement is true. Otherwise, select No.", "options": [{"text": "Yes", "correct": true}, {"text": "No", "correct": true}, {"text": "No", "correct": true}, {"text": "Yes", "correct": true}], "correct": ["Yes", "No", "No", "Yes"], "is_multi": true, "match_type": "yes_no", "pairs": [{"label": "A", "statement": "A full database backup is a copy of all the data in the entire database.", "answer": "Yes"}, {"label": "B", "statement": "A transaction log backup backs up all the data in the database.", "answer": "No"}, {"label": "C", "statement": "A differential backup copies only data that was changed before the last full backup.", "answer": "No"}, {"label": "D", "statement": "A file or filegroup restore specifies a portion of the database to recover.", "answer": "Yes"}], "choices": ["Yes", "No"]}, {"num": 169, "type": "Multiple Choice", "question": "Which of the following is a design of the user interface and the application programs that use and process the database?", "options": [{"text": "Database Planning", "correct": false}, {"text": "Application Design", "correct": true}, {"text": "Object Modeling", "correct": false}, {"text": "Database Design", "correct": false}], "correct": ["Application Design"], "is_multi": false}, {"num": 170, "type": "Multiple Choice", "question": "Mark works as a Database Administrator for DataOneWorld Inc.\nManagement instructs him to provide an additional security layer to the database to prevent unauthorized viewing of data with the help of an algorithm called cipher.\nWhich of the following will help him to accomplish the task?", "options": [{"text": "Encryption", "correct": true}, {"text": "Abstraction", "correct": false}, {"text": "Native auditing", "correct": false}, {"text": "Authentication", "correct": false}], "correct": ["Encryption"], "is_multi": false}, {"num": 171, "type": "Multiple Choice", "question": "You work as a Database Administrator for InfoTech Inc.\nThe company has a database and they want you to create a design for a database that will support the enterprise’s operations and objectives.\nWhich of the following will you use to accomplish the task?", "options": [{"text": "Requirements collection and analysis", "correct": false}, {"text": "Database design", "correct": true}, {"text": "Application design", "correct": false}, {"text": "Database planning", "correct": false}], "correct": ["Database design"], "is_multi": false}, {"num": 172, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct.\nUse the ALTER statement to add a new table in a database.\nInstructions: Review the underlined text. If it makes the statement correct, select \"No change is needed.\" If the statement is incorrect, select the answer choice that makes the statement correct.", "options": [{"text": "No change is needed", "correct": false}, {"text": "CREATE", "correct": true}, {"text": "INSERT", "correct": false}, {"text": "UPDATE", "correct": false}], "correct": ["CREATE"], "is_multi": false}, {"num": 173, "type": "Multiple Choice", "question": "What statement is used to copy records from an existing table to a new table?", "options": [{"text": "SELECT WITHIN", "correct": false}, {"text": "INSERT INTO SELECT", "correct": false}, {"text": "SELECT", "correct": false}, {"text": "SELECT INTO", "correct": true}], "correct": ["SELECT INTO"], "is_multi": false}, {"num": 174, "type": "Multiple Choice", "question": "You have a table named Product that contains the following data.\nThe ProductID column is the primary key. The CategoryID column is a foreign key to a separate table named Category.\nYou execute the following statement:\nINSERT INTO Product\nVALUES (3296, ‘Table’, 4444)\nWhat is the result?", "options": [{"text": "a foreign key constraint violation", "correct": false}, {"text": "a syntax error", "correct": false}, {"text": "a new row in the Product table", "correct": false}, {"text": "a primary key constraint violation", "correct": true}, {"text": "a new row in the Category table", "correct": false}], "correct": ["a primary key constraint violation"], "is_multi": false}, {"num": 175, "type": "Multiple Choice", "question": "You manage a database named Exams accessed via a website.", "options": [{"text": "The website is regularly accessed by users in different countries.", "correct": false}, {"text": "You are redesigning a table named History that records when users have purchased and taken online exams.", "correct": false}, {"text": "You need one of the columns in the History table to record what time of day that a user has taken an exam.", "correct": false}, {"text": "Additionally, you need this column to have time zone awareness.", "correct": false}, {"text": "What data type should you use", "correct": false}, {"text": "datetime", "correct": false}, {"text": "Use two different columns with one column of datetime, and the second column indicating the UTC offset.", "correct": false}, {"text": "datetime2", "correct": false}, {"text": "datetimeoffset", "correct": true}], "correct": ["datetimeoffset"], "is_multi": false}, {"num": 176, "type": "Multiple Choice", "question": "Which of the following steps in database planning is used to record an object so that it is represented visually in the system?", "options": [{"text": "Identifying the relationships between objects", "correct": false}, {"text": "Gathering information", "correct": false}, {"text": "Object identification", "correct": false}, {"text": "Object modeling", "correct": true}], "correct": ["Object modeling"], "is_multi": false}, {"num": 177, "type": "Multiple Choice", "question": "Which of the following is used to give a default value to a column if the value for that column is unknown?", "options": [{"text": "Concurrency", "correct": false}, {"text": "Transaction", "correct": false}, {"text": "DEFAULT constraint", "correct": true}, {"text": "Nested transaction", "correct": false}], "correct": ["DEFAULT constraint"], "is_multi": false}, {"num": 178, "type": "Multiple Choice", "question": "Which statement deletes the rows where the employee’s phone number is not entered?", "options": [{"text": "Option A", "correct": true}, {"text": "Option B", "correct": false}, {"text": "Option C", "correct": false}, {"text": "Option D", "correct": false}], "correct": ["Option A"], "is_multi": false}, {"num": 179, "type": "Multiple Choice", "question": "Which statement should you use to remove a foreign key?", "options": [{"text": "DELETE FOREIGN KEY", "correct": false}, {"text": "DELETE TABLE", "correct": false}, {"text": "ALTER FOREIGN KEY", "correct": false}, {"text": "ALTER TABLE", "correct": true}], "correct": ["ALTER TABLE"], "is_multi": false}, {"num": 180, "type": "Multiple Choice", "question": "You have a table named Product. The Product table has columns for ProductDescription and ProductCategory. You need to change the ProductCategory value for all the spoons in the Product table to 43. Which statement should you use?", "options": [{"text": "option A", "correct": true}, {"text": "option B", "correct": false}, {"text": "option D", "correct": false}, {"text": "option C", "correct": false}], "correct": ["option A"], "is_multi": false}, {"num": 181, "type": "Matching", "question": "HOTSPOT — You are structuring a table in a relational database.\nInstructions: For each of the following statements, select the appropriate Azure service.", "options": [{"text": "Azure Cognitive Services", "correct": true}, {"text": "Azure Data Factory", "correct": true}], "correct": ["Azure Cognitive Services", "Azure Data Factory"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "Parse the images from the database.", "answer": "Azure Cognitive Services"}, {"label": "B", "statement": "Upload the data to the database.", "answer": "Azure Data Factory"}], "choices": ["Azure Bot Service", "Azure Linguistic Analysis API", "Azure API Apps", "Azure Batch AI", "Azure Functions", "Azure Cognitive Services", "Azure Data Factory"]}, {"num": 182, "type": "Multiple Choice", "question": "Suzanne works as a Database Designer for DataOneWorld Inc.\nShe is assigned the task of decomposing the components of a database, but she has to ensure that all the components are decomposed to only some extent.\nWhich of the following approaches will she use to accomplish the task?", "options": [{"text": "Inside-out approach", "correct": false}, {"text": "Mixed approach", "correct": true}, {"text": "Bottom-up approach", "correct": false}, {"text": "Top-down approach", "correct": false}], "correct": ["Mixed approach"], "is_multi": false}, {"num": 183, "type": "Multiple Choice", "question": "James works as an Administrator for Softech Inc.\nThe company has a SQL Server 2005 computer named SQL1.\nThe company has six departments; Accounting, Sales, Marketing, Manufacturing, Production, and Research. The user accounts of each\ndepartment are located in a domain group named after the department. James wants to create a separate database on SQL1 for each department\nwhich will store the department related information. Users in each department must be able to read and update data in the database belonging to\ntheir respective departments.\nNo user must be able to access the database belonging to another department.\nJames wants to configure access to the database to meet these requirements.\nWhat should James do to accomplish the task?", "options": [{"text": "James should create a Windows Authentication login for each domain group and configure the logins as database users for", "correct": false}, {"text": "the appropriate database. Add each database user to the db_ddladmin database role.", "correct": false}, {"text": "James should create a Windows Authentication login for each domain user and configure the logins as database users for the", "correct": false}, {"text": "appropriate database. Add each database user to the db_ddladmin database role.", "correct": false}, {"text": "James should create a Windows Authentication login for each domain group and configure the logins as database users for", "correct": false}, {"text": "the appropriate database. Add each database user to the db_datareader and db_datawriter database roles.", "correct": false}, {"text": "James should create a Windows Authentication login for each domain user and configure the logins as database users for the", "correct": false}, {"text": "appropriate database. Add each database user to the db datareader and db datawriter database roles.", "correct": false}, {"text": "pp p _ _", "correct": false}], "correct": [], "is_multi": false}, {"num": 184, "type": "Multiple Choice", "question": "What type of parameter must be specified when creating a stored procedure?", "options": [{"text": "output", "correct": true}, {"text": "input", "correct": false}, {"text": "number", "correct": false}, {"text": "boolean", "correct": false}], "correct": ["output"], "is_multi": false}, {"num": 185, "type": "Multiple Choice", "question": "You work as a Database Designer for Tritech Inc.", "options": [{"text": "You are designing a table named Info.", "correct": false}, {"text": "The table contains the following attributes:", "correct": false}, {"text": "Login and Password", "correct": false}, {"text": "Name", "correct": false}, {"text": "ContactNumber Address", "correct": false}, {"text": "Each new employee joining the company is assigned an E-mail Login and Password.", "correct": false}, {"text": "This E-mail Login and Password is used by each employee to access his account on the company’s Web site.", "correct": false}, {"text": "The value of both the attributes should be unique and cannot be NULL.", "correct": false}, {"text": "You design an artificial key EmpID in the Info table to serve as a primary key.", "correct": false}, {"text": "Which of the following factors lead you to define an artificial key for use as a primary key in the Info table? Each correct answer represents a part of the solution. (Choose all", "correct": false}, {"text": "that apply.)", "correct": false}, {"text": "The natural key contains highly sensitive data", "correct": true}, {"text": "The value of the primary key must be persistent.", "correct": true}, {"text": "The value of the primary key cannot be NULL.", "correct": true}, {"text": "The value of the primary key must be unique.", "correct": true}], "correct": ["The natural key contains highly sensitive data", "The value of the primary key must be persistent.", "The value of the primary key cannot be NULL.", "The value of the primary key must be unique."], "is_multi": true}, {"num": 186, "type": "Multiple Choice", "question": "You have the following table definition:\nCREATE TABLE Road\n(RoadID INTEGER NOT NULL,\nDistance INTEGER NOT NULL)\nThe Road table contains the following data:\nYou execute the following statement:\nINSERT INTO Road VALUES (1234, 36)\nWhat is the result?", "options": [{"text": "an error stating that duplicate IDs are not allowed", "correct": false}, {"text": "a syntax error", "correct": false}, {"text": "an error stating that NULL values are not allowed", "correct": false}, {"text": "a new row in the table", "correct": true}], "correct": ["a new row in the table"], "is_multi": false}, {"num": 187, "type": "Multiple Choice", "question": "Which two elements are required to define a column? (Choose two.)", "options": [{"text": "A data type", "correct": true}, {"text": "An Index", "correct": false}, {"text": "A name", "correct": true}, {"text": "A key", "correct": false}], "correct": ["A data type", "A name"], "is_multi": true}, {"num": 188, "type": "Multiple Choice", "question": "Which command should you use to remove a table from a database?", "options": [{"text": "DROP TABLE", "correct": true}, {"text": "REMOVE TABLE", "correct": false}, {"text": "UPDATE TABLE", "correct": false}, {"text": "DELETE TABLE", "correct": false}], "correct": ["DROP TABLE"], "is_multi": false}, {"num": 189, "type": "Matching", "question": "Instructions: For each of the following statements, select Yes if the statement is true. Otherwise, select No.", "options": [{"text": "Yes", "correct": true}, {"text": "Yes", "correct": true}, {"text": "No", "correct": true}], "correct": ["Yes", "Yes", "No"], "is_multi": true, "match_type": "yes_no", "pairs": [{"label": "A", "statement": "A SQL Server Login can use Windows Authentication.", "answer": "Yes"}, {"label": "B", "statement": "A SQL Server Role provides permissions at the server level.", "answer": "Yes"}, {"label": "C", "statement": "A SQL Server Login is granted permission to database views only.", "answer": "No"}], "choices": ["Yes", "No"]}, {"num": 190, "type": "Multiple Choice", "question": "This question requires that you evaluate the underlined text to determine if it is correct. You have two tables. Each table has three rows.", "options": [{"text": "Three", "correct": false}, {"text": "No change is needed", "correct": true}, {"text": "Six", "correct": false}, {"text": "Zero", "correct": false}], "correct": ["No change is needed"], "is_multi": false}, {"num": 191, "type": "Matching", "question": "Instructions: For each of the following statements, select the appropriate answer choice.", "options": [{"text": "unlimited", "correct": true}, {"text": "unlimited", "correct": true}], "correct": ["unlimited", "unlimited"], "is_multi": true, "match_type": "select", "pairs": [{"label": "A", "statement": "The user can perform [answer choice] actions on data that is on the server.", "answer": "unlimited"}, {"label": "B", "statement": "The user can perform [answer choice] actions on database objects that are on the server.", "answer": "unlimited"}], "choices": ["unlimited", "read-only", "no", "configuration"]}, {"num": 192, "type": "Multiple Choice", "question": "Which of the following commands cannot be rolled back? Each correct answer represents a complete solution. (Choose two.)", "options": [{"text": "DELETE", "correct": false}, {"text": "UPDATE", "correct": false}, {"text": "TRUNCATE", "correct": true}, {"text": "COMMIT", "correct": true}], "correct": ["TRUNCATE", "COMMIT"], "is_multi": true}, {"num": 193, "type": "Multiple Choice", "question": "You have a table that contains the following data. Which database term is used to describe the relationship between ProductID and ProductCategory?", "options": [{"text": "Compositional", "correct": true}, {"text": "Cohort", "correct": false}, {"text": "Functionally dependent", "correct": false}, {"text": "Relationally dependent", "correct": false}, {"text": "Deterministic", "correct": false}], "correct": ["Compositional"], "is_multi": false}, {"num": 194, "type": "Multiple Choice", "question": "Which statement will result in the creation of an index?", "options": [{"text": "Option B", "correct": false}, {"text": "Option D", "correct": false}, {"text": "Option A", "correct": true}, {"text": "Option C", "correct": false}], "correct": ["Option A"], "is_multi": false}, {"num": 195, "type": "Multiple Choice", "question": "You need to store product names that vary from three to 30 characters. You also need to minimize the amount of storage space that is used. Which data type should you use?", "options": [{"text": "CHAR (3, 30)", "correct": false}, {"text": "VARCHAR (3, 30)", "correct": false}, {"text": "VARCHAR (30)", "correct": true}, {"text": "CHAR (30)", "correct": false}], "correct": ["VARCHAR (30)"], "is_multi": false}, {"num": 196, "type": "Multiple Choice", "question": "You have a Department table and an Employee table in your database.\nYou need to ensure that an employee can be assigned to only an existing department.\nWhat should you apply to the Employee table?", "options": [{"text": "A data type", "correct": false}, {"text": "A primary key", "correct": false}, {"text": "A unique constraint", "correct": false}, {"text": "A foreign key", "correct": true}, {"text": "An index", "correct": false}], "correct": ["A foreign key"], "is_multi": false}, {"num": 197, "type": "Multiple Choice", "question": "Which of the following enables a user to use generic methods to access a database and to focus on the coding rather than the syntax for a specific database API?", "options": [{"text": "Native auditing", "correct": false}, {"text": "Database security", "correct": false}, {"text": "Authentication", "correct": false}, {"text": "Abstraction", "correct": true}], "correct": ["Abstraction"], "is_multi": false}, {"num": 198, "type": "Multiple Choice", "question": "You need to remove a view named EmployeeView from your database. Which statement should you use?", "options": [{"text": "DROPEmployeeView", "correct": false}, {"text": "DROP EmployeeView", "correct": false}, {"text": "DELETE EmployeeView", "correct": false}, {"text": "DROP VIEW EmployeeView", "correct": true}, {"text": "DELETE VIEW EmployeeView", "correct": false}], "correct": ["DROP VIEW EmployeeView"], "is_multi": false}, {"num": 199, "type": "Multiple Choice", "question": "You need to create a view to filter rows of data from an underling table. Which type of clause must be included in the CREATE VIEW statement?", "options": [{"text": "WHERE", "correct": true}, {"text": "FILTER", "correct": false}, {"text": "JOIN", "correct": false}, {"text": "CONSTRAINT", "correct": false}], "correct": ["WHERE"], "is_multi": false}, {"num": 200, "type": "Multiple Choice", "question": "You need to store the first name, last name, and student ID for 100 students.", "options": [{"text": "This information will be stored in a table as:", "correct": false}, {"text": "three items and 100 cells.", "correct": false}, {"text": "100 rows and three columns.", "correct": true}, {"text": "100 items and three cells.", "correct": false}, {"text": "three rows and 100 columns.", "correct": false}], "correct": ["100 rows and three columns."], "is_multi": false}];
+
+let current = 0;
+let answers = {}; // {qIndex: [selectedTexts]}
+let checked = {}; // {qIndex: bool isCorrect}
+
+function init() {
+  buildMiniMap();
+  renderQuestion(current);
+}
+
+function buildMiniMap() {
+  const grid = document.getElementById('mini-map');
+  grid.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'mini-dot';
+    dot.id = `dot-${i}`;
+    dot.title = `Q${q.num}`;
+    dot.onclick = () => goTo(i);
+    grid.appendChild(dot);
+  });
+}
+
+function updateMiniMap() {
+  QUESTIONS.forEach((q, i) => {
+    const dot = document.getElementById(`dot-${i}`);
+    if (!dot) return;
+    dot.className = 'mini-dot';
+    if (i === current) dot.classList.add('current');
+    if (checked.hasOwnProperty(i)) {
+      dot.classList.add(checked[i] ? 'answered-correct' : 'answered-wrong');
+    } else {
+      const hasAnswers = (q.type === 'Matching' && q.pairs)
+        ? Object.keys(matchingAnswers[i] || {}).length > 0
+        : (answers[i] && answers[i].length > 0);
+      if (hasAnswers) dot.classList.add('answered-skipped');
+    }
+  });
+}
+
+function goTo(idx) {
+  current = idx;
+  renderQuestion(current);
+}
+
+function renderQuestion(idx) {
+  const q = QUESTIONS[idx];
+  
+  // Update header
+  document.getElementById('hdr-progress').textContent = `${idx+1} / ${QUESTIONS.length}`;
+  document.getElementById('progress-bar').style.width = `${((idx+1)/QUESTIONS.length*100).toFixed(1)}%`;
+  document.getElementById('q-badge').textContent = `Q ${q.num}`;
+  document.getElementById('q-type-badge').textContent = q.type;
+  
+  // Multi badge
+  const header = document.getElementById('card-header');
+  const existingMulti = header.querySelector('.multi-badge');
+  if (existingMulti) existingMulti.remove();
+  if (q.is_multi && q.type !== 'Matching') {
+    const badge = document.createElement('span');
+    badge.className = 'multi-badge';
+    badge.textContent = `Choose ${q.correct.length}`;
+    header.appendChild(badge);
+  }
+  
+  // Question text
+  const qText = document.getElementById('question-text');
+  qText.innerHTML = formatText(q.question, q.num);
+  
+  // Options area
+  const optList = document.getElementById('options-list');
+  optList.innerHTML = '';
+  
+  // Remove image notice if present
+  const existingNotice = document.getElementById('image-notice');
+  if (existingNotice) existingNotice.remove();
+  
+  const isChecked = checked.hasOwnProperty(idx);
+
+  // ---- MATCHING QUESTION ----
+  if (q.type === 'Matching' && q.pairs) {
+    renderMatchingQuestion(idx, q, optList, isChecked);
+  } else {
+    // ---- STANDARD MULTIPLE CHOICE ----
+    if (IMAGE_OPTION_QS.has(q.num)) {
+      const notice = document.createElement('div');
+      notice.id = 'image-notice';
+      notice.className = 'image-notice';
+      notice.innerHTML = `<span>⚠️</span> <span>This question's options contain code/images from the original exam. Options are labeled as shown. Refer to your exam materials to view the actual code.</span>`;
+      optList.parentNode.insertBefore(notice, optList);
+    }
+    
+    const savedAnswers = answers[idx] || [];
+    
+    q.options.forEach((opt, oi) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      
+      const isCode = opt.text.length > 80 || 
+                     opt.text.includes('SELECT') || opt.text.includes('CREATE') ||
+                     opt.text.includes('INSERT') || opt.text.includes('BEGIN') ||
+                     opt.text.includes('DELETE') || opt.text.includes('UPDATE');
+      if (isCode) btn.classList.add('code-option');
+      
+      const labels = ['A','B','C','D','E','F','G','H'];
+      const label = labels[oi] || String.fromCharCode(65+oi);
+      
+      const marker = document.createElement('div');
+      marker.className = 'option-marker';
+      marker.textContent = label;
+      
+      const textEl = document.createElement('span');
+      textEl.className = 'option-text';
+      textEl.textContent = opt.text;
+      
+      btn.appendChild(marker);
+      btn.appendChild(textEl);
+      
+      const isSelected = savedAnswers.includes(opt.text);
+      
+      if (isChecked) {
+        btn.disabled = true;
+        const isCorrectOpt = q.correct.some(c => c.toLowerCase().trim() === opt.text.toLowerCase().trim());
+        if (isSelected && isCorrectOpt) btn.classList.add('correct');
+        else if (isSelected && !isCorrectOpt) btn.classList.add('wrong');
+        else if (!isSelected && isCorrectOpt) btn.classList.add('reveal-correct');
+      } else {
+        if (isSelected) btn.classList.add('selected');
+        btn.onclick = () => toggleOption(idx, opt.text, btn, q.is_multi);
+      }
+      
+      optList.appendChild(btn);
+    });
+  }
+  
+  // Feedback area
+  const fb = document.getElementById('feedback-area');
+  fb.innerHTML = '';
+  if (isChecked) {
+    const isCorrect = checked[idx];
+    const div = document.createElement('div');
+    div.className = `feedback-msg ${isCorrect ? 'correct' : 'wrong'}`;
+    if (isCorrect) {
+      div.innerHTML = `<span class="feedback-icon">✓</span><div><strong>Correct!</strong></div>`;
+    } else {
+      const correctAnswers = q.pairs 
+        ? q.pairs.map(p => `${p.label}: ${p.answer}`).join(', ')
+        : q.correct.join(', ');
+      div.innerHTML = `<span class="feedback-icon">✗</span>
+        <div><strong>Incorrect.</strong><br>Correct: <em>${correctAnswers}</em></div>`;
+    }
+    fb.appendChild(div);
+  }
+  
+  // Buttons
+  document.getElementById('prev-btn').disabled = idx === 0;
+  const nextBtn = document.getElementById('next-btn');
+  const checkBtn = document.getElementById('check-btn');
+  
+  if (idx === QUESTIONS.length - 1 && isChecked) {
+    nextBtn.textContent = '🏁 Finish';
+    nextBtn.className = 'nav-btn btn-finish';
+    nextBtn.onclick = showResults;
+    nextBtn.disabled = false;
+  } else if (idx === QUESTIONS.length - 1) {
+    nextBtn.textContent = 'Next →';
+    nextBtn.className = 'nav-btn';
+    nextBtn.onclick = () => navigate(1);
+    nextBtn.disabled = true;
+  } else {
+    nextBtn.textContent = 'Next →';
+    nextBtn.className = 'nav-btn';
+    nextBtn.onclick = () => navigate(1);
+    nextBtn.disabled = false;
+  }
+  
+  const savedLen = q.type === 'Matching' && q.pairs
+    ? Object.values(matchingAnswers[idx] || {}).filter(v => v !== null && v !== undefined).length
+    : (answers[idx] || []).length;
+  
+  if (isChecked) {
+    checkBtn.disabled = true;
+    checkBtn.textContent = '✓ Checked';
+  } else {
+    checkBtn.disabled = (savedLen === 0);
+    checkBtn.textContent = 'Check';
+    checkBtn.onclick = checkAnswer;
+  }
+  
+  updateMiniMap();
+  updateFinishBtn();
+}
+
+// ============================================================
+// MATCHING QUESTION RENDERING
+// ============================================================
+
+// Separate state store for matching answers: {qIdx: {pairLabel: chosenAnswer}}
+const matchingAnswers = {};
+
+function renderMatchingQuestion(idx, q, container, isChecked) {
+  const saved = matchingAnswers[idx] || {};
+  const matchType = q.match_type;
+
+  if (matchType === 'yes_no') {
+    // Yes/No toggle for each statement
+    const table = document.createElement('div');
+    table.className = 'match-table';
+
+    q.pairs.forEach(pair => {
+      const row = document.createElement('div');
+      row.className = 'match-row';
+      
+      const stmt = document.createElement('div');
+      stmt.className = 'match-statement';
+      stmt.textContent = pair.statement;
+      
+      const btns = document.createElement('div');
+      btns.className = 'match-choices';
+      
+      q.choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'match-choice-btn';
+        btn.textContent = choice;
+        
+        const isSelected = saved[pair.label] === choice;
+        const isCorrect = pair.answer.toLowerCase() === choice.toLowerCase();
+        
+        if (isChecked) {
+          btn.disabled = true;
+          if (isSelected && isCorrect) btn.classList.add('match-correct');
+          else if (isSelected && !isCorrect) btn.classList.add('match-wrong');
+          else if (!isSelected && isCorrect) btn.classList.add('match-reveal');
+        } else {
+          if (isSelected) btn.classList.add('match-selected');
+          btn.onclick = () => selectMatchChoice(idx, pair.label, choice, btns);
+        }
+        
+        btns.appendChild(btn);
+      });
+      
+      row.appendChild(stmt);
+      row.appendChild(btns);
+      table.appendChild(row);
+    });
+    
+    container.appendChild(table);
+
+  } else if (matchType === 'select') {
+    // Dropdown selects for fill-in-the-blank
+    const table = document.createElement('div');
+    table.className = 'match-table';
+
+    q.pairs.forEach(pair => {
+      const row = document.createElement('div');
+      row.className = 'match-row';
+      
+      const stmt = document.createElement('div');
+      stmt.className = 'match-statement';
+      
+      // Replace [answer choice] with a select or the answer
+      const labelBadge = document.createElement('span');
+      labelBadge.className = 'match-label-badge';
+      labelBadge.textContent = pair.label;
+      
+      if (isChecked) {
+        const chosen = saved[pair.label];
+        const isCorrect = chosen && chosen.toLowerCase() === pair.answer.toLowerCase();
+        const ansSpan = document.createElement('span');
+        ansSpan.className = `match-answer-shown ${isCorrect ? 'match-correct-text' : 'match-wrong-text'}`;
+        ansSpan.textContent = chosen || '(not answered)';
+        
+        const text = pair.statement.replace('[answer choice]', '___');
+        stmt.innerHTML = text;
+        stmt.appendChild(document.createElement('br'));
+        const correctHint = document.createElement('span');
+        correctHint.style.cssText = 'font-size:13px; color: var(--text3); margin-top: 4px; display: block;';
+        correctHint.textContent = isCorrect ? '✓ ' + chosen : `✗ You chose: ${chosen || 'nothing'} → Correct: ${pair.answer}`;
+        correctHint.style.color = isCorrect ? '#6ee7b7' : '#fca5a5';
+        stmt.appendChild(correctHint);
+      } else {
+        stmt.textContent = pair.statement.replace('[answer choice]', '[ ? ]');
+      }
+      
+      const choicesDiv = document.createElement('div');
+      choicesDiv.className = 'match-choices match-choices-col';
+      
+      if (!isChecked) {
+        q.choices.forEach(choice => {
+          const btn = document.createElement('button');
+          btn.className = 'match-choice-btn';
+          btn.textContent = choice;
+          const isSelected = saved[pair.label] === choice;
+          if (isSelected) btn.classList.add('match-selected');
+          btn.onclick = () => selectMatchChoice(idx, pair.label, choice, choicesDiv);
+          choicesDiv.appendChild(btn);
+        });
+      }
+      
+      const leftCol = document.createElement('div');
+      leftCol.style.cssText = 'display: flex; align-items: flex-start; gap: 10px; flex: 1;';
+      leftCol.appendChild(labelBadge);
+      leftCol.appendChild(stmt);
+      
+      row.appendChild(leftCol);
+      if (!isChecked) row.appendChild(choicesDiv);
+      table.appendChild(row);
+    });
+    
+    container.appendChild(table);
+
+  } else if (matchType === 'drag_drop') {
+    // Drag and drop matching
+    renderDragDrop(idx, q, container, isChecked, saved);
+  }
+}
+
+function selectMatchChoice(idx, pairLabel, choice, btnsContainer) {
+  if (!matchingAnswers[idx]) matchingAnswers[idx] = {};
+  matchingAnswers[idx][pairLabel] = choice;
+  
+  // Update UI within this pair's button group
+  btnsContainer.querySelectorAll('.match-choice-btn').forEach(b => {
+    b.classList.remove('match-selected');
+    if (b.textContent === choice) b.classList.add('match-selected');
+  });
+  
+  // Enable check button if all pairs answered
+  const q = QUESTIONS[current];
+  const answered = Object.keys(matchingAnswers[idx] || {}).length;
+  const checkBtn = document.getElementById('check-btn');
+  checkBtn.disabled = answered === 0;
+}
+
+function renderDragDrop(idx, q, container, isChecked, saved) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'drag-drop-wrapper';
+
+  // Left: available choices (bank)
+  const bank = document.createElement('div');
+  bank.className = 'drag-bank';
+  bank.innerHTML = '<div class="drag-bank-title">📦 Available choices</div>';
+  
+  // Right: drop zones (statements)
+  const zones = document.createElement('div');
+  zones.className = 'drag-zones';
+
+  // Track which choices are already used
+  const usedChoices = new Set(Object.values(saved));
+
+  if (!isChecked) {
+    // Build draggable chips in bank
+    q.choices.forEach(choice => {
+      if (!usedChoices.has(choice)) {
+        const chip = createDragChip(choice, idx, q);
+        bank.appendChild(chip);
+      }
+    });
+  }
+
+  // Build drop zones for each pair/statement
+  q.pairs.forEach(pair => {
+    const zone = document.createElement('div');
+    zone.className = 'drag-zone';
+    
+    const labelBadge = document.createElement('span');
+    labelBadge.className = 'match-label-badge';
+    labelBadge.textContent = pair.label;
+    
+    const stmtEl = document.createElement('div');
+    stmtEl.className = 'drag-zone-statement';
+    stmtEl.textContent = pair.statement;
+    
+    const dropArea = document.createElement('div');
+    dropArea.className = 'drag-drop-area';
+    dropArea.dataset.label = pair.label;
+    
+    const chosenAnswer = saved[pair.label];
+    
+    if (isChecked) {
+      const isCorrect = chosenAnswer && chosenAnswer.toLowerCase() === pair.answer.toLowerCase();
+      dropArea.className += isCorrect ? ' drop-correct' : ' drop-wrong';
+      dropArea.innerHTML = `<span class="drop-chip ${isCorrect ? 'chip-correct' : 'chip-wrong'}">${chosenAnswer || '—'}</span>`;
+      if (!isCorrect) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'font-size: 12px; color: #6ee7b7; margin-top: 6px;';
+        hint.textContent = `✓ ${pair.answer}`;
+        dropArea.appendChild(hint);
+      }
+    } else {
+      if (chosenAnswer) {
+        // Show placed chip with ability to remove
+        const chip = document.createElement('div');
+        chip.className = 'drop-chip chip-placed';
+        chip.textContent = chosenAnswer;
+        chip.title = 'Click to remove';
+        chip.onclick = () => removeDragAnswer(idx, pair.label, chosenAnswer, q, container);
+        dropArea.appendChild(chip);
+      } else {
+        dropArea.innerHTML = '<span class="drop-placeholder">Drop here</span>';
+        
+        // Drag over / drop events
+        dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('drag-over'); });
+        dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'));
+        dropArea.addEventListener('drop', e => {
+          e.preventDefault();
+          dropArea.classList.remove('drag-over');
+          const choice = e.dataTransfer.getData('text/plain');
+          placeDragAnswer(idx, pair.label, choice, q, container);
+        });
+      }
+    }
+    
+    zone.appendChild(labelBadge);
+    zone.appendChild(stmtEl);
+    zone.appendChild(dropArea);
+    zones.appendChild(zone);
+  });
+
+  wrapper.appendChild(bank);
+  wrapper.appendChild(zones);
+  container.appendChild(wrapper);
+}
+
+function createDragChip(choice, idx, q) {
+  const chip = document.createElement('div');
+  chip.className = 'drag-chip';
+  chip.textContent = choice;
+  chip.draggable = true;
+  chip.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', choice);
+    chip.classList.add('dragging');
+  });
+  chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+  // Also support click-to-select on touch/mobile
+  chip.onclick = () => {
+    document.querySelectorAll('.drag-chip').forEach(c => c.classList.remove('chip-active'));
+    chip.classList.toggle('chip-active');
+    // If a zone is already selected, place it there
+    const activeZone = document.querySelector('.drop-placeholder.zone-active');
+    if (activeZone) {
+      const label = activeZone.closest('.drag-drop-area').dataset.label;
+      placeDragAnswer(idx, label, choice, q, document.getElementById('options-list'));
+    }
+  };
+  return chip;
+}
+
+function placeDragAnswer(idx, pairLabel, choice, q, container) {
+  if (!matchingAnswers[idx]) matchingAnswers[idx] = {};
+  matchingAnswers[idx][pairLabel] = choice;
+  // Re-render to update UI
+  container.innerHTML = '';
+  renderDragDrop(idx, q, container, false, matchingAnswers[idx]);
+  // Update check button
+  const answered = Object.values(matchingAnswers[idx]).filter(v => v).length;
+  document.getElementById('check-btn').disabled = answered === 0;
+}
+
+function removeDragAnswer(idx, pairLabel, choice, q, container) {
+  if (matchingAnswers[idx]) delete matchingAnswers[idx][pairLabel];
+  container.innerHTML = '';
+  renderDragDrop(idx, q, container, false, matchingAnswers[idx] || {});
+  const answered = Object.values(matchingAnswers[idx] || {}).filter(v => v).length;
+  document.getElementById('check-btn').disabled = answered === 0;
+}
+
+// Map of question number -> underlined term for "evaluate underlined text" questions
+const UNDERLINE_MAP = {
+  3: 'UNION keyword', 9: 'key', 19: 'denormalized', 24: 'relational database management system',
+  25: 'UNION keyword', 29: 'Views', 31: 'Truncate', 39: 'UPDATE', 44: 'CREATE TABLE',
+  84: 'Views', 99: 'unique record', 113: 'can be used to ensure referential integrity',
+  116: 'indexing', 127: 'FROM keyword', 160: 'ALLOW SELECT', 172: 'ALTER', 190: 'Nine rows'
+};
+
+// Questions where options are image-based (can't be extracted from PDF)
+const IMAGE_OPTION_QS = new Set([7, 20, 33, 34, 35, 37, 62, 69, 83, 112, 119, 133, 164, 178, 180, 194]);
+
+function formatText(text, qNum) {
+  let escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // For "evaluate underlined text" questions, format the structure nicely
+  if (UNDERLINE_MAP[qNum]) {
+    const underlinedTerm = UNDERLINE_MAP[qNum];
+    // Split into: preamble + main statement + instructions
+    const instrIdx = escaped.indexOf('Instructions:');
+    if (instrIdx !== -1) {
+      const mainStatement = escaped.substring(0, instrIdx).trim();
+      const instructions = escaped.substring(instrIdx).trim();
+      
+      // Highlight the underlined term in the main statement
+      const escapedTerm = underlinedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/&amp;/g, '&amp;').replace(/&lt;/g, '&lt;').replace(/&gt;/g, '&gt;');
+      
+      // Find and underline the term
+      const termRegex = new RegExp('(' + escapedTerm.replace(/\s+/g, '\\s+') + ')', 'i');
+      const highlightedStatement = mainStatement.replace(termRegex, '<u class="eval-underline">$1</u>');
+      
+      // Build formatted HTML
+      escaped = `${highlightedStatement}<div class="eval-instructions">${instructions}</div>`;
+    } else {
+      // Fallback: just highlight the term wherever it appears
+      const termRegex = new RegExp('(' + underlinedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+') + ')', 'gi');
+      escaped = escaped.replace(termRegex, '<u class="eval-underline">$1</u>');
+    }
+  }
+  
+  // Highlight SQL keywords (but not inside underline tags)
+  escaped = escaped.replace(/(<[^>]+>)|(\b(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|FROM|WHERE|JOIN|GROUP BY|ORDER BY|HAVING|UNION|INTERSECT|EXCEPT|NULL|NOT NULL|PRIMARY KEY|FOREIGN KEY)\b)/g,
+    (m, tag, kw) => tag ? tag : `<code>${kw}</code>`);
+  
+  return escaped;
+}
+
+function toggleOption(idx, text, btn, isMulti) {
+  if (!answers[idx]) answers[idx] = [];
+  
+  if (!isMulti) {
+    // Single select - deselect all others
+    answers[idx] = [text];
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  } else {
+    // Multi select - toggle
+    const pos = answers[idx].indexOf(text);
+    if (pos === -1) {
+      answers[idx].push(text);
+      btn.classList.add('selected');
+    } else {
+      answers[idx].splice(pos, 1);
+      btn.classList.remove('selected');
+    }
+  }
+  
+  document.getElementById('check-btn').disabled = answers[idx].length === 0;
+}
+
+function checkAnswer() {
+  const idx = current;
+  const q = QUESTIONS[idx];
+  
+  let isCorrect;
+  
+  if (q.type === 'Matching' && q.pairs) {
+    const saved = matchingAnswers[idx] || {};
+    // Check each pair
+    isCorrect = q.pairs.every(pair => {
+      const chosen = (saved[pair.label] || '').toLowerCase().trim();
+      const correct = pair.answer.toLowerCase().trim();
+      return chosen === correct;
+    });
+    // Make sure all pairs are answered
+    if (Object.keys(saved).length < q.pairs.length) {
+      isCorrect = false;
+    }
+  } else {
+    const selected = answers[idx] || [];
+    if (selected.length === 0) return;
+    
+    const correctSet = new Set(q.correct.map(c => c.toLowerCase().trim()));
+    const selectedSet = new Set(selected.map(s => s.toLowerCase().trim()));
+    
+    if (q.is_multi) {
+      isCorrect = correctSet.size === selectedSet.size &&
+        [...correctSet].every(c => selectedSet.has(c));
+    } else {
+      isCorrect = selectedSet.size === 1 && correctSet.has([...selectedSet][0]);
+    }
+  }
+  
+  checked[idx] = isCorrect;
+  renderQuestion(idx);
+}
+
+function navigate(dir) {
+  const newIdx = current + dir;
+  if (newIdx >= 0 && newIdx < QUESTIONS.length) {
+    current = newIdx;
+    renderQuestion(current);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+}
+
+function updateFinishBtn() {
+  // Show finish button in footer if all answered
+  const totalAnswered = Object.keys(checked).length;
+  // Could add a finish button somewhere
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'block';
+  
+  let correctNums = [], wrongNums = [], skippedNums = [];
+  
+  QUESTIONS.forEach((q, i) => {
+    if (checked.hasOwnProperty(i)) {
+      if (checked[i]) correctNums.push(i);
+      else wrongNums.push(i);
+    } else {
+      skippedNums.push(i);
+    }
+  });
+  
+  const total = QUESTIONS.length;
+  const pct = Math.round(correctNums.length / total * 100);
+  
+  document.getElementById('result-score').textContent = `${pct}%`;
+  document.getElementById('stat-correct').textContent = correctNums.length;
+  document.getElementById('stat-wrong').textContent = wrongNums.length;
+  document.getElementById('stat-skipped').textContent = skippedNums.length;
+  document.getElementById('stat-total').textContent = total;
+  
+  // Summaries
+  document.getElementById('correct-nums-summary').textContent = 
+    `— Qs: ${correctNums.map(i=>QUESTIONS[i].num).join(', ')}`;
+  document.getElementById('wrong-nums-summary').textContent = 
+    `— Qs: ${[...wrongNums,...skippedNums].map(i=>QUESTIONS[i].num).join(', ')}`;
+  
+  // Build correct list
+  buildReviewList('correct-list', correctNums, 'correct');
+  // Build wrong list
+  buildReviewList('wrong-list', [...wrongNums, ...skippedNums], 'wrong');
+  
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function buildReviewList(containerId, indices, type) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  
+  if (indices.length === 0) {
+    container.innerHTML = '<div style="color:var(--text3);font-size:14px;padding:16px;text-align:center;">None</div>';
+    return;
+  }
+  
+  indices.forEach(idx => {
+    const q = QUESTIONS[idx];
+    const item = document.createElement('div');
+    item.className = `review-item ri-${type === 'correct' ? (checked[idx] ? 'correct' : 'wrong') : 'wrong'}`;
+    
+    const statusText = checked[idx] === true ? 'Correct' : (checked[idx] === false ? 'Wrong' : 'Skipped');
+    const statusClass = checked[idx] === true ? 'correct' : (checked[idx] === false ? 'wrong' : 'skipped');
+    
+    const selectedAnswers = answers[idx] || [];
+    
+    item.innerHTML = `
+      <div class="ri-header">
+        <span class="ri-num">Q${q.num}</span>
+        <span class="ri-status ${statusClass}">${statusText}</span>
+        <span class="ri-expand-hint">Click to expand</span>
+      </div>
+      <div class="ri-question">${q.question.substring(0, 180)}${q.question.length > 180 ? '...' : ''}</div>
+      <div class="ri-answers">
+        ${selectedAnswers.length > 0 ? selectedAnswers.map(a => {
+          const isCorrectAns = q.correct.some(c => c.toLowerCase().trim() === a.toLowerCase().trim());
+          return `<div class="ri-answer-row ${isCorrectAns ? 'your-correct' : 'your-ans'}">
+            ${isCorrectAns ? '✓' : '✗'} Your answer: ${a}
+          </div>`;
+        }).join('') : '<div class="ri-answer-row" style="color:var(--yellow)">— Not answered</div>'}
+        ${q.correct.map(c => {
+          const wasSelected = selectedAnswers.some(a => a.toLowerCase().trim() === c.toLowerCase().trim());
+          return wasSelected ? '' : `<div class="ri-answer-row correct-ans">✓ Correct: ${c}</div>`;
+        }).join('')}
+      </div>
+    `;
+    
+    item.onclick = () => item.classList.toggle('expanded');
+    container.appendChild(item);
+  });
+}
+
+function setFilter(section, filter) {
+  // future use
+}
+
+function resetQuiz() {
+  current = 0;
+  answers = {};
+  checked = {};
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'flex';
+  buildMiniMap();
+  renderQuestion(0);
+  window.scrollTo({top:0});
+}
+
+// Also allow finishing from any point via keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
+  if (e.key === 'Enter') {
+    const checkBtn = document.getElementById('check-btn');
+    if (!checkBtn.disabled) checkAnswer();
+  }
+});
+
+// Add finish quiz button in header area once started
+function addFinishOption() {
+  // Optional: add a "Finish Quiz" button
+}
+
+init();
+</script>
+</body>
+</html>
