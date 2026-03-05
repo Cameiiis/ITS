@@ -921,6 +921,9 @@
       </div>
     </div>
     <div class="header-right">
+      <button class="nav-btn" id="shuffle-btn" onclick="shuffleQuiz()" style="font-size:13px;padding:8px 16px;background:rgba(99,102,241,0.2);border-color:rgba(99,102,241,0.5);color:#a5b4fc;" title="Randomize question order and answer choices">
+        🔀 Shuffle
+      </button>
       <button class="nav-btn btn-finish" id="finish-quiz-btn" onclick="showResults()" style="font-size:13px;padding:8px 16px;">
         🏁 Finish Quiz
       </button>
@@ -1020,6 +1023,56 @@ let current = 0;
 let answers = {}; // {qIndex: [selectedTexts]}
 let checked = {}; // {qIndex: bool isCorrect}
 
+// activeQuestions is the working list (shuffled or original)
+let activeQuestions = QUESTIONS.slice();
+
+function fisherYates(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function shuffleQuiz() {
+  // Deep-copy questions so we can shuffle options without mutating originals
+  const shuffled = fisherYates(QUESTIONS).map(q => {
+    const copy = Object.assign({}, q);
+    if (copy.options && copy.options.length > 1) {
+      // Don't shuffle yes/no or drag-drop — order matters for those
+      if (copy.match_type !== 'yes_no' && copy.match_type !== 'drag_drop') {
+        copy.options = fisherYates(copy.options);
+      }
+    }
+    return copy;
+  });
+
+  activeQuestions = shuffled;
+  current = 0;
+  answers = {};
+  checked = {};
+  matchingAnswers = {};
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'flex';
+  buildMiniMap();
+  renderQuestion(0);
+  window.scrollTo({top: 0});
+
+  // Visual feedback on button
+  const btn = document.getElementById('shuffle-btn');
+  btn.textContent = '✅ Shuffled!';
+  btn.style.background = 'rgba(16,185,129,0.2)';
+  btn.style.borderColor = 'rgba(16,185,129,0.5)';
+  btn.style.color = '#6ee7b7';
+  setTimeout(() => {
+    btn.textContent = '🔀 Shuffle';
+    btn.style.background = 'rgba(99,102,241,0.2)';
+    btn.style.borderColor = 'rgba(99,102,241,0.5)';
+    btn.style.color = '#a5b4fc';
+  }, 1500);
+}
+
 function init() {
   buildMiniMap();
   renderQuestion(current);
@@ -1028,7 +1081,7 @@ function init() {
 function buildMiniMap() {
   const grid = document.getElementById('mini-map');
   grid.innerHTML = '';
-  QUESTIONS.forEach((q, i) => {
+  activeQuestions.forEach((q, i) => {
     const dot = document.createElement('div');
     dot.className = 'mini-dot';
     dot.id = `dot-${i}`;
@@ -1039,7 +1092,7 @@ function buildMiniMap() {
 }
 
 function updateMiniMap() {
-  QUESTIONS.forEach((q, i) => {
+  activeQuestions.forEach((q, i) => {
     const dot = document.getElementById(`dot-${i}`);
     if (!dot) return;
     dot.className = 'mini-dot';
@@ -1061,11 +1114,11 @@ function goTo(idx) {
 }
 
 function renderQuestion(idx) {
-  const q = QUESTIONS[idx];
+  const q = activeQuestions[idx];
   
   // Update header
-  document.getElementById('hdr-progress').textContent = `${idx+1} / ${QUESTIONS.length}`;
-  document.getElementById('progress-bar').style.width = `${((idx+1)/QUESTIONS.length*100).toFixed(1)}%`;
+  document.getElementById('hdr-progress').textContent = `${idx+1} / ${activeQuestions.length}`;
+  document.getElementById('progress-bar').style.width = `${((idx+1)/activeQuestions.length*100).toFixed(1)}%`;
   document.getElementById('q-badge').textContent = `Q ${q.num}`;
   document.getElementById('q-type-badge').textContent = q.type;
   
@@ -1174,12 +1227,12 @@ function renderQuestion(idx) {
   const nextBtn = document.getElementById('next-btn');
   const checkBtn = document.getElementById('check-btn');
   
-  if (idx === QUESTIONS.length - 1 && isChecked) {
+  if (idx === activeQuestions.length - 1 && isChecked) {
     nextBtn.textContent = '🏁 Finish';
     nextBtn.className = 'nav-btn btn-finish';
     nextBtn.onclick = showResults;
     nextBtn.disabled = false;
-  } else if (idx === QUESTIONS.length - 1) {
+  } else if (idx === activeQuestions.length - 1) {
     nextBtn.textContent = 'Next →';
     nextBtn.className = 'nav-btn';
     nextBtn.onclick = () => navigate(1);
@@ -1213,7 +1266,7 @@ function renderQuestion(idx) {
 // ============================================================
 
 // Separate state store for matching answers: {qIdx: {pairLabel: chosenAnswer}}
-const matchingAnswers = {};
+let matchingAnswers = {};
 
 function renderMatchingQuestion(idx, q, container, isChecked) {
   const saved = matchingAnswers[idx] || {};
@@ -1343,7 +1396,7 @@ function selectMatchChoice(idx, pairLabel, choice, btnsContainer) {
   });
   
   // Enable check button if all pairs answered
-  const q = QUESTIONS[current];
+  const q = activeQuestions[current];
   const answered = Object.keys(matchingAnswers[idx] || {}).length;
   const checkBtn = document.getElementById('check-btn');
   checkBtn.disabled = answered === 0;
@@ -1585,7 +1638,7 @@ function toggleOption(idx, text, btn, isMulti) {
 
 function checkAnswer() {
   const idx = current;
-  const q = QUESTIONS[idx];
+  const q = activeQuestions[idx];
   
   let isCorrect;
   
@@ -1622,7 +1675,7 @@ function checkAnswer() {
 
 function navigate(dir) {
   const newIdx = current + dir;
-  if (newIdx >= 0 && newIdx < QUESTIONS.length) {
+  if (newIdx >= 0 && newIdx < activeQuestions.length) {
     current = newIdx;
     renderQuestion(current);
     window.scrollTo({top: 0, behavior: 'smooth'});
@@ -1641,7 +1694,7 @@ function showResults() {
   
   let correctNums = [], wrongNums = [], skippedNums = [];
   
-  QUESTIONS.forEach((q, i) => {
+  activeQuestions.forEach((q, i) => {
     if (checked.hasOwnProperty(i)) {
       if (checked[i]) correctNums.push(i);
       else wrongNums.push(i);
@@ -1650,7 +1703,7 @@ function showResults() {
     }
   });
   
-  const total = QUESTIONS.length;
+  const total = activeQuestions.length;
   const pct = Math.round(correctNums.length / total * 100);
   
   document.getElementById('result-score').textContent = `${pct}%`;
@@ -1661,9 +1714,9 @@ function showResults() {
   
   // Summaries
   document.getElementById('correct-nums-summary').textContent = 
-    `— Qs: ${correctNums.map(i=>QUESTIONS[i].num).join(', ')}`;
+    `— Qs: ${correctNums.map(i=>activeQuestions[i].num).join(', ')}`;
   document.getElementById('wrong-nums-summary').textContent = 
-    `— Qs: ${[...wrongNums,...skippedNums].map(i=>QUESTIONS[i].num).join(', ')}`;
+    `— Qs: ${[...wrongNums,...skippedNums].map(i=>activeQuestions[i].num).join(', ')}`;
   
   // Build correct list
   buildReviewList('correct-list', correctNums, 'correct');
@@ -1683,7 +1736,7 @@ function buildReviewList(containerId, indices, type) {
   }
   
   indices.forEach(idx => {
-    const q = QUESTIONS[idx];
+    const q = activeQuestions[idx];
     const item = document.createElement('div');
     item.className = `review-item ri-${type === 'correct' ? (checked[idx] ? 'correct' : 'wrong') : 'wrong'}`;
     
@@ -1726,6 +1779,8 @@ function resetQuiz() {
   current = 0;
   answers = {};
   checked = {};
+  matchingAnswers = {};
+  activeQuestions = QUESTIONS.slice(); // restore original order
   document.getElementById('results-screen').style.display = 'none';
   document.getElementById('quiz-screen').style.display = 'flex';
   buildMiniMap();
